@@ -299,7 +299,7 @@ const handleGenerateContract = async (contractId: number) => {
     // Create PDF instance
     const doc = new jsPDF();
     let yPosition = 20;
-    const lineHeight = 5.5;
+    const lineHeight = 5.3;
     const margin = 20;
     const maxWidth = 170;
     
@@ -333,36 +333,28 @@ const handleGenerateContract = async (contractId: number) => {
     };
 
     const addEmptyLine = () => {
-      yPosition += 4;
+      yPosition += 2;
     };
     
-    // Add content
+    
     addText('CONTRATO DE LOCAÇÃO DE AUTOMÓVEL DE PRAZO DETERMINADO', true, 14);
+    addEmptyLine();
     addText('IDENTIFICAÇÃO DAS PARTES CONTRATANTES', true, 12);
     addEmptyLine();
-    
     addText('LOCADOR: Eridelsom Dias Moreira, residente na Rua: Desembargador Antônio Miguel Feu Rosa, nº 479, Condomínio Praças Reserva - Bloco: 07 - Apartamento; 301 - Praia da Baleia - Cep: 29.172-680, no Estado do Espírito Santo- ES, neste ato representada como proprietário do carro - Brasileiro, Casado - Empresario, RG: 1.895.253 - ES e CPF: 093.523.627-99;');
-  
     addText(`LOCATÁRIO: ${clientContract.nome}, Brasileiro - RG: ${clientContract.rg} CPF: ${clientContract.cpf}, residente e domiciliado na ${clientContract.endereco}, ${clientContract.numero} - ${clientContract.bairro} - ${clientContract.cidade} - ${clientContract.estado} - CEP: ${clientContract.cep}`);
     addEmptyLine();
-    
     addText('As partes acima identificadas têm, entre si, justo e acertado o presente Contrato de Locação de Automóvel de Prazo Determinado, que se regerá pelas cláusulas seguintes e pelas condições descritas no presente.',true);
     addEmptyLine();
-
-    // CLÁUSULA PRIMEIRA
     addText('CLÁUSULA PRIMEIRA - OBJETO DO CONTRATO', true);
     addText(`1.1 O presente contrato tem como OBJETO a locação do automóvel marca ${vehicleContract.marca}, modelo ${vehicleContract.modelo}, ano ${vehicleContract.ano}, COR ${vehicleContract.cor}, Placa: ${vehicleContract.placa} - RENAVAM: ${vehicleContract.renavam} de propriedade do LOCADOR.`);
     addEmptyLine();
-
-    // CLAUSULA SEGUNDA
     addText('CLAUSULA SEGUNDA - PRAZO', true);
     addText('2.1 O prazo da locação e o local de devolução do carro estarão registrados no Contrato como "Data e Local de Devolução".');
     addText('2.2 O período máximo de cada locação é de 10 dias. Findo esse prazo, deverá ser assinado um novo Contrato vinculado às Condições Gerais e Tarifário vigentes na época da renovação.');
     addText('2.3. Havendo prorrogação da locação, permanecerão em vigor todos os termos das Condições Gerais, ficando o Cliente sujeito às eventuais variações de preços do Tarifário e à perda de negociação realizada em locação anterior.');
     addText('2.4. A prorrogação da locação para Cliente Pessoa Física dependerá de pagamento antecipado ou de nova pré-autorização com deposito em conta corrente indicada pelo LOCADOR.');
     addEmptyLine();
-
-    // CLÁUSULA TERCEIRA
     addText('CLÁUSULA TERCEIRA - O PREÇO', true);
     addText('3.1. O preço final do aluguel será apurado no fechamento ou na rescisão do Contrato e compreenderá o somatório dos valores dos seguintes itens descritos no Tarifário:');
     addText(`Caução: R$ ${contractToPdf.caucao || '00'}`, true, 10, 1);
@@ -478,11 +470,8 @@ const handleGenerateContract = async (contractId: number) => {
     addText('8.5.1. O Cliente se obriga ao pagamento de todos os débitos decorrentes do aluguel até a devolução do carro.');
     addText('8.5.3. Todos os valores, despesas e encargos da locação constituem-se dívidas líquidas e certas para pagamento à vista, passíveis de cobrança executiva.');
     addText('8.5.4. A Locadora fica desde já autorizada a cobrar diretamente, via bancos, ou debitar automaticamente esses valores no cartão de crédito do LOCATARIO, por meio do sistema de assinatura em arquivo, mesmo que as despesas tenham sido apuradas após o encerramento do Contrato. O envio dos documentos de cobrança poderá ser feito por meio impresso ou eletrônico, a critério exclusivo da Locadora. É de responsabilidade exclusiva do LOCATARIO informar e atualizar os dados do responsável pelo recebimento das faturas por meio eletrônico e/ou físico, sob pena dos mesmos serem considerados entregues.');
-    addEmptyLine();
-
-    // CLAUSULA NONA
+   
     addText('CLAUSULA NONA - SEGURO DISPONIBILIZADO PELO LOCADOR', true);
-    addEmptyLine();
     addText('9.1. O LOCADOR, na condição de estipulante de seguro, disponibiliza ao Cliente a opção de Cobertura de seguro incluso na locação referentes a danos causados ao carro alugado em virtude de colisão, incêndio, roubo, furto ("Seguro do Carro") e responsabilidade civil perante terceiros ("Seguro para Terceiros"), em decorrência de acidente de trânsito envolvendo o carro alugado/segurado, nos termos das Condições Gerais do Seguro de Automóvel.');
     addText('9.2.1. O Seguro do Carro oferece cobertura exclusivamente para furto, roubo, incêndio ou avarias no carro alugado.');
     addText('9.2.2. O Seguro para Terceiros oferece cobertura exclusivamente para danos materiais, corporais e morais a terceiros.');
@@ -511,8 +500,6 @@ const handleGenerateContract = async (contractId: number) => {
     addText('9.3.19. Despesas decorrentes da apropriação indébita do carro alugado.');
     addText('9.3.20. Serviços profissionais de advogados e/ou despachantes.');
     addText('9.3.21. Extravio ou perda das chaves e documentos do carro.');
-    addEmptyLine();
-    
     addText('9.4. Além dos casos previstos na Apólice, o Cliente não terá direito à cobertura securitária se:', true);
     addText('9.4.1. Agir com Culpa Grave ou Uso Inadequado do carro.');
     addText('9.4.2. Utilizar o carro para fim diverso do indicado na Apólice ou Contrato.');
@@ -522,8 +509,6 @@ const handleGenerateContract = async (contractId: number) => {
     addText('9.4.6. Deixar de comparecer às audiências em que for convocado, não elaborar sua defesa nos prazos legais e/ou não se fizer representar em processo judicial.');
     addText('9.4.7. O sinistro ocorrer após furto do carro alugado, quando não forem devolvidos à Locadora as chaves e os documentos do carro.');
     addEmptyLine();
-
-    // CLAUSULA DECIMA
     addText('CLAUSULA DECIMA - RESCISÃO', true);
     addText('10.1. O Contrato será considerado automaticamente rescindido pela Locadora, independentemente de qualquer notificação e esta, sem mais formalidades, providenciará a retomada do carro, sem que isso enseje ao Cliente qualquer direito de retenção ou indenização, quando:');
     addText('10.1.1. O carro não for devolvido na data, hora e agência previamente ajustadas.');
@@ -533,17 +518,12 @@ const handleGenerateContract = async (contractId: number) => {
     addText('10.1.5. O Cliente não quitar seus débitos nos respectivos vencimentos.');
     addText('10.1.6 Caso ocorra rescisão do contrato por parte do LOCATARIO antes do prazo estipulado será aplicado multa de 50% sobre o valor dos dias a vencer abatidos do valor da caução na devolução ao LOCATARIO observadas possíveis avarias no carro.', true, 10, 1);
     addEmptyLine();
-
-    // CLAUSULA DECIMA PRIMEIRA
     addText('CLAUSULA DECIMA PRIMEIRA - DISPOSIÇÕES GERAIS', true);
-    addEmptyLine();
     addText('11.1. O LOCADOR concorda que a sua assinatura no Contrato implica ciência e adesão por si, seus herdeiros/sucessores a estas Condições Gerais, desde que respeitados os artigos 46 e 47 da Lei nº 8.078/90.');
     addText('11.2. Eventual omissão ou atraso de qualquer das Partes em exigir o cumprimento de qualquer condição do Contrato ou em exercer qualquer direito não constituirá novação, nem implicará renúncia da possibilidade futura de exigir seu cumprimento.');
     addText('11.3. O Contrato formalizado entre as Partes substitui quaisquer acordos anteriores.');
     addText('11.4. A Locadora não se responsabiliza por objetos/valores deixados no carro ou em suas dependências.');
     addEmptyLine();
-
-    // CLAUSULA DECIMA SEGUNDA
     addText('CLAUSULA DECIMA SEGUNDA - DO FORO', true);
     addText('12.1 Para dirimir quaisquer controvérsias oriundas do CONTRATO, as partes elegem o foro da comarca de Serra;');
     addEmptyLine();
@@ -551,8 +531,8 @@ const handleGenerateContract = async (contractId: number) => {
     // Assinaturas
        addText('Por estarem assim justos e contratados, firmam o presente instrumento, em duas vias de igual teor, juntamente com 2 (duas) testemunhas.');
     addEmptyLine();
-    addEmptyLine();
-    
+
+
     // Data formatada por extenso
     const dataExtenso = new Date(contractToPdf.data_criacao).toLocaleDateString('pt-BR', {
       day: 'numeric',
@@ -634,7 +614,7 @@ const handleGenerateContract = async (contractId: number) => {
                 <SelectContent>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                      {vehicle.modelo} - {vehicle.placa}
+                      {vehicle.marca} - {vehicle.placa}
                     </SelectItem>
                   ))}
                 </SelectContent>
