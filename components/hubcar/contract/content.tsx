@@ -55,7 +55,7 @@ type Contract = {
   idcliente: number
   idveiculo: number
   cliente_nome: string
-  veiculo_modelo: string
+  veiculo_placa: string
   data_inicio: string
   data_final: string
   contrato_modelo: string
@@ -83,7 +83,7 @@ export default function ContractContent() {
     idcliente: '',
     idveiculo: '',
     cliente_nome: '',
-    veiculo_modelo: '',
+    veiculo_placa: '',
     data_inicio: '',
     data_final: '',
     contrato_modelo: ''
@@ -122,7 +122,7 @@ export default function ContractContent() {
     setFormData(prev => ({
       ...prev,
       idveiculo: vehicleId,
-      veiculo_modelo: vehicle ? vehicle.modelo : ''
+      veiculo_placa: vehicle ? vehicle.placa : ''
     }))
   }
 
@@ -158,7 +158,7 @@ export default function ContractContent() {
       idcliente: '',
       idveiculo: '',
       cliente_nome: '',
-      veiculo_modelo: '',
+      veiculo_placa: '',
       data_inicio: '',
       data_final: '',
       contrato_modelo: ''
@@ -174,7 +174,7 @@ export default function ContractContent() {
       idcliente: contract.idcliente?.toString() || '',
       idveiculo: contract.idveiculo?.toString() || '',
       cliente_nome: contract.cliente_nome || '',
-      veiculo_modelo: contract.veiculo_modelo || '',
+      veiculo_placa: contract.veiculo_placa || '',
       data_inicio: contract.data_inicio || '',
       data_final: contract.data_final || '',
       contrato_modelo: contract.contrato_modelo || ''
@@ -217,7 +217,7 @@ export default function ContractContent() {
               idcliente: parseInt(formData.idcliente),
               idveiculo: parseInt(formData.idveiculo),
               cliente_nome: formData.cliente_nome,
-              veiculo_modelo: formData.veiculo_modelo,
+              veiculo_placa: formData.veiculo_placa,
               data_inicio: formData.data_inicio,
               data_final: formData.data_final,
               contrato_modelo: formData.contrato_modelo
@@ -231,7 +231,7 @@ export default function ContractContent() {
         idcliente: parseInt(formData.idcliente),
         idveiculo: parseInt(formData.idveiculo),
         cliente_nome: formData.cliente_nome,
-        veiculo_modelo: formData.veiculo_modelo,
+        veiculo_placa: formData.veiculo_placa,
         data_inicio: formData.data_inicio,
         data_final: formData.data_final,
         contrato_modelo: formData.contrato_modelo,
@@ -246,7 +246,7 @@ export default function ContractContent() {
       idcliente: '',
       idveiculo: '',
       cliente_nome: '',
-      veiculo_modelo: '',
+      veiculo_placa: '',
       data_inicio: '',
       data_final: '',
       contrato_modelo: ''
