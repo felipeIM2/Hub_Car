@@ -40,7 +40,8 @@ export default function ClientContent() {
     complemento: '',
     bairro: '',
     cidade: '',
-    estado: ''
+    estado: '',
+    cep: ''
   })
 
   // Format CPF: 000.000.000-00
@@ -51,6 +52,19 @@ export default function ClientContent() {
     for (let i = 0; i < digits.length; i++) {
       if (i === 3 || i === 6) formatted += '.'
       if (i === 9) formatted += '-'
+      formatted += digits[i]
+    }
+    
+    return formatted
+  }
+
+  // Format CEP: 00000-000
+  const formatCEP = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8)
+    let formatted = ''
+    
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 5) formatted += '-'
       formatted += digits[i]
     }
     
@@ -105,6 +119,11 @@ export default function ClientContent() {
         ...prev,
         [name]: formatRG(value)
       }))
+    } else if (name === 'cep') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: formatCEP(value)
+      }))
     } else if (name === 'numero') {
       // Only allow numbers for numero field
       const numericValue = value.replace(/\D/g, '')
@@ -144,7 +163,8 @@ export default function ClientContent() {
       complemento: '',
       bairro: '',
       cidade: '',
-      estado: ''
+      estado: '',
+      cep: ''
     })
     setIsDialogOpen(true)
   }
@@ -164,7 +184,8 @@ export default function ClientContent() {
       complemento: client.complemento || '',
       bairro: client.bairro || '',
       cidade: client.cidade || '',
-      estado: client.estado || ''
+      estado: client.estado || '',
+      cep: client.cep || ''
     })
     setIsDialogOpen(true)
   }
@@ -183,7 +204,7 @@ export default function ClientContent() {
     
     if (isEditing && currentClientId) {
       // Update existing client
-      setClients((prev:any) => prev.map((client:any) => 
+      setClients((prev: any[]) => prev.map((client: any) => 
         client.id === currentClientId 
           ? {
               ...client,
@@ -198,7 +219,8 @@ export default function ClientContent() {
               complemento: formData.complemento,
               bairro: formData.bairro,
               cidade: formData.cidade,
-              estado: formData.estado
+              estado: formData.estado,
+              cep: formData.cep
             }
           : client
       ))
@@ -220,7 +242,8 @@ export default function ClientContent() {
               complemento: formData.complemento,
               bairro: formData.bairro,
               cidade: formData.cidade,
-              estado: formData.estado
+              estado: formData.estado,
+              cep: formData.cep
             }
           : client
       )
@@ -240,28 +263,15 @@ export default function ClientContent() {
         complemento: formData.complemento,
         bairro: formData.bairro,
         cidade: formData.cidade,
-        estado: formData.estado
+        estado: formData.estado,
+        cep: formData.cep
       }
       
-      setClients((prev:any) => [...prev, newClient])
+      setClients((prev: any[]) => [...prev, newClient])
       
       // Save to localStorage
       const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
-      storedClients.push({
-        id: newClient.id,
-        nome: formData.nome.toLocaleUpperCase(),
-        email: formData.email,
-        cpf: formData.cpf,
-        rg: formData.rg,
-        telefone: formData.telefone,
-        endereco: formData.endereco,
-        numero: formData.numero,
-        semNumero: formData.semNumero,
-        complemento: formData.complemento,
-        bairro: formData.bairro,
-        cidade: formData.cidade,
-        estado: formData.estado
-      })
+      storedClients.push(newClient)
       localStorage.setItem('clients', JSON.stringify(storedClients))
     }
     
@@ -278,7 +288,8 @@ export default function ClientContent() {
       complemento: '',
       bairro: '',
       cidade: '',
-      estado: ''
+      estado: '',
+      cep: ''
     })
     setIsDialogOpen(false)
   }
@@ -304,7 +315,6 @@ export default function ClientContent() {
                   value={formData.nome} 
                   onChange={handleInputChange} 
                   required 
-                  autoComplete="off"
                 />
               </div>
               
@@ -318,7 +328,6 @@ export default function ClientContent() {
                   placeholder="000.000.000-00"
                   maxLength={14}
                   required 
-                  autoComplete="off"
                 />
               </div>
               
@@ -329,10 +338,9 @@ export default function ClientContent() {
                   name="rg" 
                   value={formData.rg} 
                   onChange={handleInputChange} 
-                  placeholder="0.000.000"
-                  maxLength={9}
+                  placeholder="00.000.000-X"
+                  maxLength={12}
                   required 
-                  autoComplete="off"
                 />
               </div>
               
@@ -345,7 +353,6 @@ export default function ClientContent() {
                   value={formData.email} 
                   onChange={handleInputChange} 
                   required 
-                   autoComplete="off"
                 />
               </div>
               
@@ -359,7 +366,19 @@ export default function ClientContent() {
                   placeholder="(00) 00000-0000"
                   maxLength={15}
                   required 
-                  autoComplete="off"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input 
+                  id="cep" 
+                  name="cep" 
+                  value={formData.cep} 
+                  onChange={handleInputChange} 
+                  placeholder="00000-000"
+                  maxLength={9}
+                  required 
                 />
               </div>
             </div>

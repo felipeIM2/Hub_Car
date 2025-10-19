@@ -32,6 +32,9 @@ export default function VehicleContent() {
     ano: '',
     kmInicial: '',
     kmAtual: '',
+    marca: '',
+    cor: '',
+    renavam: ''
   })
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -83,6 +86,9 @@ export default function VehicleContent() {
       ano: '',
       kmInicial: '',
       kmAtual: '',
+      marca: '',
+      cor: '',
+      renavam: ''
     })
     setErrorMessage('')
     setIsDialogOpen(true)
@@ -97,6 +103,9 @@ export default function VehicleContent() {
       ano: vehicle.ano || '',
       kmInicial: vehicle.kmInicial || '',
       kmAtual: vehicle.kmAtual || '',
+      marca: vehicle.marca || '',
+      cor: vehicle.cor || '',
+      renavam: vehicle.renavam || ''
     })
     setErrorMessage('')
     setIsDialogOpen(true)
@@ -121,16 +130,12 @@ export default function VehicleContent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validate plate format (should be in format ABC-1234)
-    const plateRegex = /^[A-Z]{3}-\d{4}$/
-    if (!plateRegex.test(formData.placa)) {
-      setErrorMessage('Formato de placa inválido! Use o formato ABC-1234')
-      return
-    }
+    // Format plate to uppercase and remove spaces
+    const formattedPlate = formData.placa.replace(/\s/g, '').toUpperCase()
     
-    // Validate plate uniqueness
-    if (!isEditing || (isEditing && formData.placa !== vehicles.find((v:any) => v.id === currentVehicleId)?.placa)) {
-      if (!validatePlate(formData.placa, currentVehicleId)) {
+    // Validate plate
+    if (!isEditing || (isEditing && formData.placa !== vehicles.find((v: any) => v.id === currentVehicleId)?.placa)) {
+      if (!validatePlate(formattedPlate, currentVehicleId)) {
         setErrorMessage('Já existe um veículo cadastrado com esta placa!')
         return
       }
@@ -138,15 +143,18 @@ export default function VehicleContent() {
     
     if (isEditing && currentVehicleId) {
       // Update existing vehicle
-      setVehicles((prev:any) => prev.map((vehicle:any) => 
+      setVehicles((prev: any[]) => prev.map((vehicle: any) => 
         vehicle.id === currentVehicleId 
           ? {
               ...vehicle,
-              placa: formData.placa,
-              modelo: formData.modelo.toLocaleUpperCase(),
+              placa: formattedPlate,
+              modelo: formData.modelo,
               ano: formData.ano,
               kmInicial: formData.kmInicial,
               kmAtual: formData.kmAtual,
+              marca: formData.marca,
+              cor: formData.cor,
+              renavam: formData.renavam
             }
           : vehicle
       ))
@@ -157,11 +165,14 @@ export default function VehicleContent() {
         vehicle.id === currentVehicleId 
           ? {
               ...vehicle,
-              placa: formData.placa,
-              modelo: formData.modelo.toLocaleUpperCase(),
+              placa: formattedPlate,
+              modelo: formData.modelo,
               ano: formData.ano,
               kmInicial: formData.kmInicial,
               kmAtual: formData.kmAtual,
+              marca: formData.marca,
+              cor: formData.cor,
+              renavam: formData.renavam
             }
           : vehicle
       )
@@ -170,14 +181,17 @@ export default function VehicleContent() {
       // Add new vehicle
       const newVehicle = {
         id: Date.now(),
-        placa: formData.placa,
-        modelo: formData.modelo.toLocaleUpperCase(),
+        placa: formattedPlate,
+        modelo: formData.modelo,
         ano: formData.ano,
         kmInicial: formData.kmInicial,
         kmAtual: formData.kmAtual,
+        marca: formData.marca,
+        cor: formData.cor,
+        renavam: formData.renavam
       }
       
-      setVehicles((prev:any) => [...prev, newVehicle])
+      setVehicles((prev: any[]) => [...prev, newVehicle])
       
       // Save to localStorage
       const storedVehicles = JSON.parse(localStorage.getItem('vehicles') || '[]')
@@ -192,6 +206,9 @@ export default function VehicleContent() {
       ano: '',
       kmInicial: '',
       kmAtual: '',
+      marca: '',
+      cor: '',
+      renavam: ''
     })
     setErrorMessage('')
     setIsDialogOpen(false)
@@ -213,20 +230,16 @@ export default function VehicleContent() {
               <div className="text-red-500 text-sm">{errorMessage}</div>
             )}
             
+  
             <div className="space-y-2">
-              <Label htmlFor="placa">Placa</Label>
+              <Label htmlFor="marca">Marca</Label>
               <Input 
-                id="placa" 
-                name="placa" 
-                value={formData.placa} 
+                id="marca" 
+                name="marca" 
+                value={formData.marca} 
                 onChange={handleInputChange} 
-                placeholder="ABC-1234"
-                maxLength={8}
                 required 
-                className={errorMessage ? "border-red-500" : ""}
-                autoComplete="off"
               />
-              
             </div>
             
             <div className="space-y-2">
@@ -236,8 +249,34 @@ export default function VehicleContent() {
                 name="modelo" 
                 value={formData.modelo} 
                 onChange={handleInputChange} 
-                required
-                autoComplete="off" 
+                required 
+              />
+            </div>
+
+              <div className="space-y-2">
+              <Label htmlFor="placa">Placa</Label>
+                <Input 
+                  id="placa" 
+                  name="placa" 
+                  value={formData.placa} 
+                  onChange={handleInputChange} 
+                  placeholder="ABC-1234"
+                  maxLength={8}
+                  required 
+                  className={errorMessage ? "border-red-500" : ""}
+                  autoComplete="off"
+              />
+              
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="cor">Cor</Label>
+              <Input 
+                id="cor" 
+                name="cor" 
+                value={formData.cor} 
+                onChange={handleInputChange} 
+                required 
               />
             </div>
             
@@ -249,8 +288,17 @@ export default function VehicleContent() {
                 value={formData.ano} 
                 onChange={handleInputChange} 
                 required 
-                type="number"
-                autoComplete="off"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="renavam">Renavam</Label>
+              <Input 
+                id="renavam" 
+                name="renavam" 
+                value={formData.renavam} 
+                onChange={handleInputChange} 
+                required 
               />
             </div>
             
@@ -263,7 +311,6 @@ export default function VehicleContent() {
                 value={formData.kmInicial} 
                 onChange={handleInputChange} 
                 required 
-                autoComplete="off"
               />
             </div>
             
@@ -276,7 +323,6 @@ export default function VehicleContent() {
                 value={formData.kmAtual} 
                 onChange={handleInputChange} 
                 required 
-                autoComplete="off"
               />
             </div>
             
@@ -327,7 +373,7 @@ export default function VehicleContent() {
           {vehicles.map((vehicle:any) => {
             return(
               <TableRow key={vehicle.id}>
-                <TableCell>{vehicle.modelo}</TableCell>
+                <TableCell>{vehicle.marca}</TableCell>
                 <TableCell className="font-medium">{vehicle.placa}</TableCell>
                 <TableCell>{vehicle.ano}</TableCell>
                 <TableCell>{vehicle.kmInicial}</TableCell>
