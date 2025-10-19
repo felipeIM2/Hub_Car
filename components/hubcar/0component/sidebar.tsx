@@ -13,11 +13,13 @@ import {
 } from "lucide-react"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 export default function Sidebar() {
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   function setLabel(label: string) {
     sessionStorage.setItem("itemLabel", label)
@@ -38,11 +40,17 @@ export default function Sidebar() {
     children: React.ReactNode
     
   }) {
+    const isActive = pathname === href
+    
     return (
       <Link
         href={href}
         onClick={handleNavigation}
-        className="flex items-center px-3 py-2 text-sm rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#1F1F23]"
+        className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+          isActive 
+            ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-[#1F1F23] font-medium" 
+            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#1F1F23]"
+        }`}
       >
         <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
         {children}

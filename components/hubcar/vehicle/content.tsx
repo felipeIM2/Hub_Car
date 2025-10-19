@@ -320,7 +320,7 @@ export default function VehicleContent() {
             <TableHead>Ano</TableHead>
             <TableHead>KM inicial</TableHead>
             <TableHead>KM atual</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Editar</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

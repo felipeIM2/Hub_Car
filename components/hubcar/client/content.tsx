@@ -483,7 +483,7 @@ export default function ClientContent() {
             <TableHead>Contato</TableHead>
             <TableHead>Documento</TableHead>
             <TableHead>Contato</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Editar</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
