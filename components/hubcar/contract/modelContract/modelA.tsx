@@ -263,17 +263,43 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
     addText(`Serra, ${dataExtenso}.`);
     addEmptyLine();
 
-    // Assinaturas do Locatário e Locador
-    addText('________________________________                                           ________________________________');
-    addText(`${clientContract.nome}                                                      Eridelson Dias Moreira`);
-    addText('LOCATÁRIO				                                                         LOCADOR', true);
-    addEmptyLine();
+    const addSignatures = () => {
 
-    addText('Testemunhas:');
-    addText('__________________________________                                     ________________________________');
-    addText('                                                                                                            Ailândia Regina Infurna Moreira');
-    addText('CPF:	                 		                                                            CPF: 093.504.867-76');
-    
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const signatureY = pageHeight - 70; // posição fixa do bloco de assinaturas
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      // Linhas de assinatura
+      doc.text('________________________________', margin, signatureY - 10);
+      doc.text('________________________________', margin + 100, signatureY - 10);
+
+      // Nomes
+      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY - 4);
+      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY - 4);
+
+      // Títulos
+      doc.setFont('helvetica', 'bold');
+      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 1);
+      doc.text('LOCADOR', margin + 100.5, signatureY + 1);
+
+      // Testemunhas
+      const witnessY = signatureY + 30;
+      doc.text('TESTEMUNHAS:', margin + 66, witnessY - 16);
+
+      doc.setFont('helvetica', 'normal');
+      doc.text('________________________________', margin, witnessY + 5);
+      doc.text('________________________________', margin + 100, witnessY + 5);
+      
+      doc.text('', margin, witnessY + 10);
+      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 100, witnessY + 11);
+
+      doc.text('CPF: ___________________', margin + 6, witnessY + 16);
+      doc.text('CPF: 093.504.867-76', margin + 114, witnessY + 16);
+    }
+
+    addSignatures()                 		                                                           
     
     // doc.save(`Contrato_Locação_${clientContract.nome}_${vehicleContract.placa}.pdf`);
     const pdfBlob = doc.output('blob');
