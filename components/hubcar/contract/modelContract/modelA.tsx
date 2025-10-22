@@ -80,7 +80,7 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
     addText(`Locação: R$ ${contractToPdf.valor_locacao || '00'} na retirada do carro`, true, 10, 1);
     addText(`O carro está sendo entregue no dia ${startDateFormatted} - ${contractToPdf.hora_entrega || '0h'} e será devolvido no dia ${endDateFormatted} - ${contractToPdf.hora_entrega || '0h'}`, true, 10, 1);
     addText(`Franquia KM Contratado: ${contractToPdf.franquia || '0'} KMs`, true, 10, 1);
-    addText('KM Excedente: R$ 0,60 por KM Rodado.', true, 10, 1);
+    addText('KM Excedente: R$ 1,20  por KM Rodado.', true, 10, 1);
     addEmptyLine();
     addText('Das opções de Pagamento:', true, 10, 1);
     addText('PIX: 093.523.627-99', true, 10, 1);
@@ -272,31 +272,31 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
       doc.setFont('helvetica', 'normal');
       
       // Linhas de assinatura
-      doc.text('________________________________', margin, signatureY - 10);
-      doc.text('________________________________', margin + 100, signatureY - 10);
+      doc.text('________________________________', margin, signatureY + 10);
+      doc.text('________________________________', margin + 100, signatureY + 10);
 
       // Nomes
-      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY - 4);
-      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY - 4);
+      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY + 15);
+      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY + 15);
 
       // Títulos
       doc.setFont('helvetica', 'bold');
-      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 1);
-      doc.text('LOCADOR', margin + 100.5, signatureY + 1);
+      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 20);
+      doc.text('LOCADOR', margin + 100.5, signatureY + 20);
 
       // Testemunhas
       const witnessY = signatureY + 30;
-      doc.text('TESTEMUNHAS:', margin + 66, witnessY - 16);
+      doc.text('TESTEMUNHAS:', margin + 66, witnessY);
 
       doc.setFont('helvetica', 'normal');
-      doc.text('________________________________', margin, witnessY + 5);
-      doc.text('________________________________', margin + 100, witnessY + 5);
+      doc.text('_________________________________', margin, witnessY + 10);
+      doc.text('_________________________________', margin + 100, witnessY + 10);
       
-      doc.text('', margin, witnessY + 10);
-      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 100, witnessY + 11);
+      doc.text('', margin, witnessY);
+      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 100, witnessY + 15);
 
-      doc.text('CPF: ___________________', margin + 6, witnessY + 16);
-      doc.text('CPF: 093.504.867-76', margin + 114, witnessY + 16);
+      doc.text('CPF: ___________________', margin + 6, witnessY + 20);
+      doc.text('CPF: 093.504.867-76', margin + 114, witnessY + 20);
     }
 
     addSignatures()                 		                                                           

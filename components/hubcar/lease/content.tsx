@@ -356,7 +356,7 @@ export default function LeaseContent() {
     
     if (kmValue > franquia) {
       const extraKm = kmValue - franquia;
-      const extraValue = extraKm * 0.60;
+      const extraValue = extraKm * 1.20;
       const newValue = baseValue + extraValue;
       return newValue.toFixed(2);
     } else {
@@ -670,7 +670,7 @@ export default function LeaseContent() {
               <p className="text-sm text-gray-500">
                 Franquia: {currentLeaseFranquia} KM <br/> 
                 Valor base: R$ {currentLeaseValor.toFixed(2)} <br/> 
-                Adicional: R$ 0,60 por KM excedente
+                Adicional: R$ 1,20 por KM excedente
               </p>
             </div>
             <div className="flex justify-end space-x-2">
