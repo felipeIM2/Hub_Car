@@ -25,7 +25,7 @@ export default function ClientContent() {
   // Fetch clients from API
   const fetchClients = async () => {
     try {
-      const response = await fetch('/api/clients')
+      const response = await fetch('@app/api/clients')
       const data = await response.json()
       setClients(data)
     } catch (error) {
