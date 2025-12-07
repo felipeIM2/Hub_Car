@@ -27,7 +27,7 @@ import { useState, useEffect } from "react"
 
 // Define types
 type Client = {
-  id: number
+  id: string
   nome: string
   cpf: string
   rg: string
@@ -44,7 +44,7 @@ type Client = {
 }
 
 type Vehicle = {
-  id: number
+  id: string
   placa: string
   modelo: string
   ano: string
@@ -56,9 +56,9 @@ type Vehicle = {
 }
 
 type Lease = {
-  id: number
-  idcliente: number
-  idveiculo: number
+  id: string
+  idcliente: string
+  idveiculo: string
   cliente_nome: string
   veiculo_info: string
   kmatual: string
@@ -72,9 +72,9 @@ type Lease = {
 }
 
 type Contract = {
-  id: number
-  idcliente: number
-  idveiculo: number
+  id: string
+  idcliente: string
+  idveiculo: string
   cliente_nome: string
   data_inicio: string
   data_final: string
@@ -90,25 +90,66 @@ type Contract = {
 export default function LeaseContent() {
   const { toast } = useToast()
   
-  // Load leases from localStorage
-  const [leases, setLeases] = useState<Lease[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('leases')
-      return saved ? JSON.parse(saved) : []
-    }
-    return []
-  })
-
-  // Load clients and vehicles for select options
+  const [leases, setLeases] = useState<Lease[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  
-  // Load contracts for import functionality
   const [contracts, setContracts] = useState<Contract[]>([])
   
+  // Fetch leases from API
+  const fetchLeases = async () => {
+    try {
+      const response = await fetch('/api/leases')
+      const data = await response.json()
+      setLeases(data)
+    } catch (error) {
+      console.error('Error fetching leases:', error)
+    }
+  }
+
+  // Fetch clients from API
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('/api/clients')
+      const data = await response.json()
+      setClients(data)
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+    }
+  }
+
+  // Fetch vehicles from API
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch('/api/vehicles')
+      const data = await response.json()
+      setVehicles(data)
+    } catch (error) {
+      console.error('Error fetching vehicles:', error)
+    }
+  }
+
+  // Fetch contracts from API
+  const fetchContracts = async () => {
+    try {
+      const response = await fetch('/api/contracts')
+      const data = await response.json()
+      setContracts(data)
+    } catch (error) {
+      console.error('Error fetching contracts:', error)
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchLeases()
+    fetchClients()
+    fetchVehicles()
+    fetchContracts()
+  }, [])
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentLeaseId, setCurrentLeaseId] = useState<number | null>(null)
+  const [currentLeaseId, setCurrentLeaseId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     idcliente: '',
     idveiculo: '',
@@ -132,33 +173,13 @@ export default function LeaseContent() {
   const [isKmModalOpen, setIsKmModalOpen] = useState(false)
   const [kmrodadoValue, setKmrodadoValue] = useState('')
   const [calculatedValue, setCalculatedValue] = useState('')
-  const [currentLeaseForKm, setCurrentLeaseForKm] = useState<number | null>(null)
+  const [currentLeaseForKm, setCurrentLeaseForKm] = useState<string | null>(null)
   const [currentLeaseFranquia, setCurrentLeaseFranquia] = useState<number>(0)
   const [currentLeaseValor, setCurrentLeaseValor] = useState<number>(0)
   const [isValueManuallyChanged, setIsValueManuallyChanged] = useState(false)
   
-  // Load clients, vehicles, and contracts from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedClients = localStorage.getItem('clients')
-      const savedVehicles = localStorage.getItem('vehicles')
-      const savedContracts = localStorage.getItem('contracts')
-      
-      setClients(savedClients ? JSON.parse(savedClients) : [])
-      setVehicles(savedVehicles ? JSON.parse(savedVehicles) : [])
-      setContracts(savedContracts ? JSON.parse(savedContracts) : [])
-    }
-  }, [])
-
-  // Save leases to localStorage whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('leases', JSON.stringify(leases))
-    }
-  }, [leases])
-
   const handleSelectClient = (clientId: string) => {
-    const client = clients.find((c) => c.id === parseInt(clientId))
+    const client = clients.find((c) => c.id === clientId)
     setFormData(prev => ({
       ...prev,
       idcliente: clientId,
@@ -167,7 +188,7 @@ export default function LeaseContent() {
   }
 
   const handleSelectVehicle = (vehicleId: string) => {
-    const vehicle = vehicles.find((v) => v.id === parseInt(vehicleId))
+    const vehicle = vehicles.find((v) => v.id === vehicleId)
     setFormData(prev => ({
       ...prev,
       idveiculo: vehicleId,
@@ -226,8 +247,8 @@ export default function LeaseContent() {
     setIsEditing(true)
     setCurrentLeaseId(lease.id)
     setFormData({
-      idcliente: lease.idcliente?.toString() || '',
-      idveiculo: lease.idveiculo?.toString() || '',
+      idcliente: lease.idcliente || '',
+      idveiculo: lease.idveiculo || '',
       cliente_nome: lease.cliente_nome || '',
       veiculo_info: lease.veiculo_info || '',
       kmatual: lease.kmatual || '',
@@ -242,39 +263,61 @@ export default function LeaseContent() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteLease = (leaseId: number) => {
-    // Before deleting, if the lease was completed, revert the KM change
-    const leaseToDelete = leases.find(lease => lease.id === leaseId);
-    if (leaseToDelete && leaseToDelete.status === 'Concluído' && leaseToDelete.kmrodado) {
-      updateVehicleKM(leaseToDelete.idveiculo, -parseFloat(leaseToDelete.kmrodado));
+  const handleDeleteLease = async (leaseId: string) => {
+    try {
+      const response = await fetch(`/api/leases/${leaseId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Refresh lease list
+        fetchLeases()
+      } else {
+        console.error('Failed to delete lease')
+      }
+    } catch (error) {
+      console.error('Error deleting lease:', error)
     }
-    
-    setLeases(prev => prev.filter((lease) => lease.id !== leaseId))
   }
 
-  // Function to update vehicle KM
-  const updateVehicleKM = (vehicleId: number, kmChange: number) => {
-    if (typeof window !== 'undefined') {
-      const storedVehicles = JSON.parse(localStorage.getItem('vehicles') || '[]');
-      const updatedVehicles = storedVehicles.map((vehicle: Vehicle) => {
-        if (vehicle.id === vehicleId) {
-          const currentKM = parseFloat(vehicle.kmAtual) || 0;
-          const newKM = currentKM + kmChange;
-          return {
-            ...vehicle,
-            kmAtual: newKM.toString()
-          };
-        }
-        return vehicle;
+  // Function to update vehicle KM in MongoDB
+  const updateVehicleKM = async (vehicleId: string, kmChange: number) => {
+    try {
+      // Fetch the current vehicle data
+      const vehicleResponse = await fetch(`/api/vehicles/${vehicleId}`);
+      if (!vehicleResponse.ok) {
+        console.error('Failed to fetch vehicle data');
+        return;
+      }
+      
+      const vehicle = await vehicleResponse.json();
+      
+      // Calculate new kmAtual value
+      const currentKm = parseFloat(vehicle.kmAtual) || 0;
+      const newKm = currentKm + kmChange;
+      
+      // Update the vehicle with new kmAtual value
+      const response = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...vehicle,
+          kmAtual: newKm.toString(),
+        }),
       });
       
-      localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
-      setVehicles(updatedVehicles);
+      if (!response.ok) {
+        console.error('Failed to update vehicle KM');
+      }
+    } catch (error) {
+      console.error('Error updating vehicle KM:', error);
     }
   };
 
   // Function to update lease status directly from table
-  const updateLeaseStatus = (leaseId: number, newStatus: string) => {
+  const updateLeaseStatus = async (leaseId: string, newStatus: string) => {
     // Get the lease to check current status and kmrodado
     const leaseToUpdate = leases.find(lease => lease.id === leaseId);
     
@@ -317,35 +360,49 @@ export default function LeaseContent() {
       }
     }
     
-    // Update the lease status
-    const updatedLeases = leases.map(lease => {
-      if (lease.id === leaseId) {
-        const updatedLease = {
-          ...lease,
-          status: newStatus
-        };
-        
-        // Handle status change logic for KM updates
-        if (lease.status === 'Concluído' && newStatus !== 'Concluído' && lease.kmrodado) {
-          // If was completed and now is not, subtract KM
-          updateVehicleKM(lease.idveiculo, -parseFloat(lease.kmrodado));
-        } else if (newStatus === 'Concluído' && lease.status !== 'Concluído' && lease.kmrodado) {
-          // If now is completed and wasn't before, add KM
-          updateVehicleKM(lease.idveiculo, parseFloat(lease.kmrodado));
-        }
-        
-        return updatedLease;
+    // Handle KM updates based on status changes
+    if (leaseToUpdate.status === 'Concluído' && (newStatus === 'Ativo' || newStatus === 'Cancelado')) {
+      // Changing from Concluído to Ativo or Cancelado - subtract kmrodado
+      const kmrodado = parseFloat(leaseToUpdate.kmrodado || '0') || 0;
+      if (kmrodado > 0) {
+        await updateVehicleKM(leaseToUpdate.idveiculo, -kmrodado);
       }
-      return lease;
-    });
+    } else if (leaseToUpdate.status !== 'Concluído' && newStatus === 'Concluído') {
+      // Changing to Concluído - add kmrodado
+      const kmrodado = parseFloat(leaseToUpdate.kmrodado || '0') || 0;
+      if (kmrodado > 0) {
+        await updateVehicleKM(leaseToUpdate.idveiculo, kmrodado);
+      }
+    }
     
-    setLeases(updatedLeases);
-    
-    // Show success toast
-    toast({
-      title: "Status atualizado",
-      description: `O status da locação foi atualizado para ${newStatus}.`,
-    });
+    // Update the lease status
+    try {
+      const response = await fetch(`/api/leases/${leaseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...leaseToUpdate,
+          status: newStatus
+        }),
+      })
+      
+      if (response.ok) {
+        // Refresh lease list
+        fetchLeases()
+        
+        // Show success toast
+        toast({
+          title: "Status atualizado",
+          description: `O status da locação foi atualizado para ${newStatus}.`,
+        });
+      } else {
+        console.error('Failed to update lease status')
+      }
+    } catch (error) {
+      console.error('Error updating lease status:', error)
+    }
   };
 
   // Function to calculate the new value based on kmrodado and franquia
@@ -388,7 +445,7 @@ export default function LeaseContent() {
   };
 
   // Function to save kmrodado value
-  const saveKmrodado = () => {
+  const saveKmrodado = async () => {
     if (!currentLeaseForKm) return;
     
     const kmValue = parseFloat(kmrodadoValue) || 0;
@@ -412,40 +469,50 @@ export default function LeaseContent() {
     }
     
     // Update the lease with kmrodado value and calculated value
-    const updatedLeases = leases.map(lease => {
-      if (lease.id === currentLeaseForKm) {
-        return {
-          ...lease,
-          kmrodado: kmValue.toString(),
-          valor: valueToSave.toString(),
-          status: 'Concluído'
-        };
+    try {
+      const lease = leases.find(l => l.id === currentLeaseForKm);
+      if (lease) {
+        const response = await fetch(`/api/leases/${currentLeaseForKm}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...lease,
+            kmrodado: kmValue.toString(),
+            valor: valueToSave.toString(),
+            status: 'Concluído'
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh lease list
+          fetchLeases()
+          
+          // Update vehicle KM
+          await updateVehicleKM(lease.idveiculo, kmValue);
+          
+          // Close modal and show success toast
+          setIsKmModalOpen(false);
+          setCurrentLeaseForKm(null);
+          setKmrodadoValue('');
+          setCalculatedValue('');
+          setIsValueManuallyChanged(false);
+          
+          toast({
+            title: "KM Registrado",
+            description: "O KM rodado foi registrado e o status atualizado para Concluído.",
+          });
+        } else {
+          console.error('Failed to update lease')
+        }
       }
-      return lease;
-    });
-    
-    setLeases(updatedLeases);
-    
-    // Update vehicle KM
-    const lease = leases.find(l => l.id === currentLeaseForKm);
-    if (lease) {
-      updateVehicleKM(lease.idveiculo, kmValue);
+    } catch (error) {
+      console.error('Error updating lease:', error)
     }
-    
-    // Close modal and show success toast
-    setIsKmModalOpen(false);
-    setCurrentLeaseForKm(null);
-    setKmrodadoValue('');
-    setCalculatedValue('');
-    setIsValueManuallyChanged(false);
-    
-    toast({
-      title: "KM Registrado",
-      description: "O KM rodado foi registrado e o status atualizado para Concluído.",
-    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Validate required fields
@@ -472,7 +539,7 @@ export default function LeaseContent() {
     }
     
     // Validate that the vehicle doesn't have an active lease
-    const vehicleId = parseInt(formData.idveiculo);
+    const vehicleId = formData.idveiculo;
     const hasActiveLease = leases.some(lease => 
       lease.idveiculo === vehicleId && 
       lease.status === 'Ativo' && 
@@ -490,91 +557,113 @@ export default function LeaseContent() {
       return
     }
     
-    if (isEditing && currentLeaseId) {
-      // Get the existing lease to check status changes
-      const existingLease = leases.find(lease => lease.id === currentLeaseId);
-      
-      // Update existing lease
-      const updatedLeases = leases.map((lease) => {
-        if (lease.id === currentLeaseId) {
-          const updatedLease = {
-            ...lease,
-            idcliente: parseInt(formData.idcliente),
-            idveiculo: parseInt(formData.idveiculo),
+    try {
+      if (isEditing && currentLeaseId) {
+        // Get the existing lease to check status changes
+        const existingLease = leases.find(lease => lease.id === currentLeaseId);
+        
+        // Handle KM updates based on status changes
+        if (existingLease && existingLease.status === 'Concluído' && (formData.status === 'Ativo' || formData.status === 'Cancelado')) {
+          // Changing from Concluído to Ativo or Cancelado - subtract kmrodado
+          const kmrodado = parseFloat(existingLease.kmrodado || '0') || 0;
+          if (kmrodado > 0) {
+            await updateVehicleKM(formData.idveiculo, -kmrodado);
+          }
+        } else if (existingLease && existingLease.status !== 'Concluído' && formData.status === 'Concluído') {
+          // Changing to Concluído - add kmrodado
+          const kmrodado = parseFloat(formData.kmrodado || '0') || 0;
+          if (kmrodado > 0) {
+            await updateVehicleKM(formData.idveiculo, kmrodado);
+          }
+        }
+        
+        // Update existing lease
+        const response = await fetch(`/api/leases/${currentLeaseId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idcliente: formData.idcliente,
+            idveiculo: formData.idveiculo,
             cliente_nome: formData.cliente_nome,
             veiculo_info: formData.veiculo_info,
             kmatual: formData.kmatual,
             kmrodado: formData.kmrodado,
             franquia: formData.franquia,
             valor: formData.valor,
-            datainicial: formData.datainicial,
-            datafinal: formData.datafinal,
+            datainicial: formData.datainicial.includes('T') ? formData.datainicial : new Date(formData.datainicial).toISOString(),
+            datafinal: formData.datafinal.includes('T') ? formData.datafinal : new Date(formData.datafinal).toISOString(),
             status: formData.status
-          };
-          
-          // Handle status change logic
-          if (existingLease) {
-            // If lease was previously completed and now is not, subtract KM
-            if (existingLease.status === 'Concluído' && formData.status !== 'Concluído' && existingLease.kmrodado) {
-              updateVehicleKM(parseInt(formData.idveiculo), -parseFloat(existingLease.kmrodado));
-            }
-            // If lease is now completed and wasn't before, add KM
-            else if (formData.status === 'Concluído' && existingLease.status !== 'Concluído' && formData.kmrodado) {
-              updateVehicleKM(parseInt(formData.idveiculo), parseFloat(formData.kmrodado));
-            }
-            // If lease was completed and still is, but KM changed, update the difference
-            else if (formData.status === 'Concluído' && existingLease.status === 'Concluído' && formData.kmrodado !== existingLease.kmrodado) {
-              const kmDifference = (parseFloat(formData.kmrodado) || 0) - (parseFloat(existingLease.kmrodado) || 0);
-              if (kmDifference !== 0) {
-                updateVehicleKM(parseInt(formData.idveiculo), kmDifference);
-              }
-            }
-          }
-          
-          return updatedLease;
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh lease list
+          fetchLeases()
+        } else {
+          console.error('Failed to update lease')
         }
-        return lease;
-      });
-      
-      setLeases(updatedLeases);
-    } else {
-      // Add new lease
-      const newLease: Lease = {
-        id: Date.now(),
-        idcliente: parseInt(formData.idcliente),
-        idveiculo: parseInt(formData.idveiculo),
-        cliente_nome: formData.cliente_nome,
-        veiculo_info: formData.veiculo_info,
-        kmatual: formData.kmatual,
-        kmrodado: formData.kmrodado,
-        franquia: formData.franquia,
-        valor: formData.valor,
-        datainicial: formData.datainicial,
-        datafinal: formData.datafinal,
-        status: formData.status,
-        data_criacao: new Date().toISOString()
+      } else {
+        // Add new lease
+        const response = await fetch('/api/leases', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idcliente: formData.idcliente,
+            idveiculo: formData.idveiculo,
+            cliente_nome: formData.cliente_nome,
+            veiculo_info: formData.veiculo_info,
+            kmatual: formData.kmatual,
+            kmrodado: formData.kmrodado,
+            franquia: formData.franquia,
+            valor: formData.valor,
+            datainicial: formData.datainicial.includes('T') ? formData.datainicial : new Date(formData.datainicial).toISOString(),
+            datafinal: formData.datafinal.includes('T') ? formData.datafinal : new Date(formData.datafinal).toISOString(),
+            status: formData.status
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh lease list
+          fetchLeases()
+        } else {
+          console.error('Failed to create lease')
+        }
       }
       
-      setLeases(prev => [...prev, newLease])
+      // Reset form and close dialog
+      setFormData({
+        idcliente: '',
+        idveiculo: '',
+        cliente_nome: '',
+        veiculo_info: '',
+        kmatual: '',
+        kmrodado: '',
+        franquia: '',
+        valor: '',
+        datainicial: '',
+        datafinal: '',
+        status: 'Ativo'
+      })
+      setErrorMessage('')
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
     }
-    
-    // Reset form and close dialog
-    setFormData({
-      idcliente: '',
-      idveiculo: '',
-      cliente_nome: '',
-      veiculo_info: '',
-      kmatual: '',
-      kmrodado: '',
-      franquia: '',
-      valor: '',
-      datainicial: '',
-      datafinal: '',
-      status: 'Ativo'
-    })
-    setErrorMessage('')
-    setIsDialogOpen(false)
   }
+
+  const formatDateForInput = (dateString: string): string => {
+  if (!dateString) return '';
+  // If it's already in YYYY-MM-DD format, return as is
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+  // Otherwise convert from ISO string to YYYY-MM-DD
+  return dateString.split('T')[0];
+};
 
   // Format currency
   const formatCurrency = (value: string) => {
@@ -592,18 +681,28 @@ export default function LeaseContent() {
     const client = clients.find(c => c.id === contract.idcliente);
     const vehicle = vehicles.find(v => v.id === contract.idveiculo);
     
+    // Format dates properly for lease form
+    const formatDateForLease = (dateString: string): string => {
+      if (!dateString) return '';
+      // If it's already in ISO format, convert to YYYY-MM-DD
+      if (dateString.includes('T')) {
+        return dateString.split('T')[0];
+      }
+      return dateString;
+    };
+    
     // Set form data with contract information
     setFormData({
-      idcliente: contract.idcliente?.toString() || '',
-      idveiculo: contract.idveiculo?.toString() || '',
+      idcliente: contract.idcliente || '',
+      idveiculo: contract.idveiculo || '',
       cliente_nome: client ? client.nome : contract.cliente_nome || '',
       veiculo_info: vehicle ? `${vehicle.marca} : ${vehicle.placa}` : '',
       kmatual: vehicle ? vehicle.kmAtual || '' : '',
       kmrodado: '',
       franquia: contract.franquia || '',
-      valor: contract.valor_locacao || '',
-      datainicial: contract.data_inicio || '',
-      datafinal: contract.data_final || '',
+      valor: contract.valor_locacao?.toString() || '',
+      datainicial: formatDateForLease(contract.data_inicio) || '',
+      datafinal: formatDateForLease(contract.data_final) || '',
       status: 'Ativo'
     });
     
@@ -761,7 +860,7 @@ export default function LeaseContent() {
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
+                    <SelectItem key={client.id} value={client.id}>
                       {client.nome}
                     </SelectItem>
                   ))}
@@ -780,7 +879,7 @@ export default function LeaseContent() {
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
                       {vehicle.marca} - {vehicle.placa}
                     </SelectItem>
                   ))}
@@ -858,7 +957,7 @@ export default function LeaseContent() {
                   id="datainicial" 
                   name="datainicial" 
                   type="date"
-                  value={formData.datainicial} 
+                  value={formatDateForInput(formData.datainicial)} 
                   onChange={handleInputChange} 
                   required 
                 />
@@ -870,7 +969,7 @@ export default function LeaseContent() {
                   id="datafinal" 
                   name="datafinal" 
                   type="date"
-                  value={formData.datafinal} 
+                  value={formatDateForInput(formData.datafinal)} 
                   onChange={handleInputChange} 
                   required 
                 />
@@ -878,7 +977,6 @@ export default function LeaseContent() {
 
             </div>
 
-  
             
             <div className="flex justify-end space-x-2 pt-4">
               {isEditing && (

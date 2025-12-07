@@ -266,7 +266,8 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
     const addSignatures = () => {
 
       const pageHeight = doc.internal.pageSize.getHeight();
-      const signatureY = pageHeight - 70; // posição fixa do bloco de assinaturas
+      const signatureY = pageHeight - 70; // posição fixa do bloco de assinaturas 
+      
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -275,28 +276,32 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
       doc.text('________________________________', margin, signatureY + 10);
       doc.text('________________________________', margin + 100, signatureY + 10);
 
-      // Nomes
-      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY + 15);
-      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY + 15);
+      // Nomes.
+      doc.setFontSize(8);
+      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY + 14);
+      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY + 14);
 
       // Títulos
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 20);
-      doc.text('LOCADOR', margin + 100.5, signatureY + 20);
+      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 18);
+      doc.text('LOCADOR', margin + 100.5, signatureY + 18);
 
       // Testemunhas
       const witnessY = signatureY + 30;
-      doc.text('TESTEMUNHAS:', margin + 66, witnessY);
-
+      doc.text('TESTEMUNHAS:', margin + 72, witnessY);
+      
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text('_________________________________', margin, witnessY + 10);
       doc.text('_________________________________', margin + 100, witnessY + 10);
       
       doc.text('', margin, witnessY);
-      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 100, witnessY + 15);
+      doc.setFontSize(8);
+      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 108, witnessY + 14);
 
-      doc.text('CPF: ___________________', margin + 6, witnessY + 20);
-      doc.text('CPF: 093.504.867-76', margin + 114, witnessY + 20);
+      doc.text('CPF: ___________________', margin + 6, witnessY + 18);
+      doc.text('CPF: 093.504.867-76', margin + 120, witnessY + 18);
     }
 
     addSignatures()                 		                                                           

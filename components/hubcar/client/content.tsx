@@ -16,18 +16,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Pencil, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function ClientContent() {
 
-  let listClients = JSON.parse(localStorage.getItem('clients') || '[]') 
-  console.log(listClients)
+  const [clients, setClients] = useState<any[]>([])
 
-  const [clients, setClients] = useState(listClients)
+  // Fetch clients from API
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('/api/clients')
+      const data = await response.json()
+      setClients(data)
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+    }
+  }
+
+  // Load clients on component mount
+  useEffect(() => {
+    fetchClients()
+  }, [])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentClientId, setCurrentClientId] = useState<number | null>(null)
+  const [currentClientId, setCurrentClientId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
@@ -190,108 +203,108 @@ export default function ClientContent() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteClient = (clientId: number) => {
-    setClients((prev:any) => prev.filter((client:any) => client.id !== clientId))
-    
-    // Also remove from localStorage
-    const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
-    const updatedClients = storedClients.filter((client: any) => client.id !== clientId)
-    localStorage.setItem('clients', JSON.stringify(updatedClients))
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Refresh client list
+        fetchClients()
+      } else {
+        console.error('Failed to delete client')
+      }
+    } catch (error) {
+      console.error('Error deleting client:', error)
+    }
   }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (isEditing && currentClientId) {
-      // Update existing client
-      setClients((prev: any[]) => prev.map((client: any) => 
-        client.id === currentClientId 
-          ? {
-              ...client,
-              nome: formData.nome.toLocaleUpperCase(),
-              email: formData.email,
-              cpf: formData.cpf,
-              rg: formData.rg,
-              telefone: formData.telefone,
-              endereco: formData.endereco,
-              numero: formData.numero,
-              semNumero: formData.semNumero,
-              complemento: formData.complemento,
-              bairro: formData.bairro,
-              cidade: formData.cidade,
-              estado: formData.estado,
-              cep: formData.cep
-            }
-          : client
-      ))
-      
-      // Update in localStorage
-      const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
-      const updatedClients = storedClients.map((client: any) => 
-        client.id === currentClientId 
-          ? {
-              ...client,
-              nome: formData.nome.toLocaleUpperCase(),
-              email: formData.email,
-              cpf: formData.cpf,
-              rg: formData.rg,
-              telefone: formData.telefone,
-              endereco: formData.endereco,
-              numero: formData.numero,
-              semNumero: formData.semNumero,
-              complemento: formData.complemento,
-              bairro: formData.bairro,
-              cidade: formData.cidade,
-              estado: formData.estado,
-              cep: formData.cep
-            }
-          : client
-      )
-      localStorage.setItem('clients', JSON.stringify(updatedClients))
-    } else {
-      // Add new client
-      const newClient = {
-        id: Date.now(),
-        nome: formData.nome.toLocaleUpperCase(),
-        email: formData.email,
-        cpf: formData.cpf,
-        rg: formData.rg,
-        telefone: formData.telefone,
-        endereco: formData.endereco,
-        numero: formData.numero,
-        semNumero: formData.semNumero,
-        complemento: formData.complemento,
-        bairro: formData.bairro,
-        cidade: formData.cidade,
-        estado: formData.estado,
-        cep: formData.cep
+    try {
+      if (isEditing && currentClientId) {
+        // Update existing client
+        const response = await fetch(`/api/clients/${currentClientId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nome: formData.nome.toLocaleUpperCase(),
+            email: formData.email,
+            cpf: formData.cpf,
+            rg: formData.rg,
+            telefone: formData.telefone,
+            endereco: formData.endereco,
+            numero: formData.numero,
+            semNumero: formData.semNumero,
+            complemento: formData.complemento,
+            bairro: formData.bairro,
+            cidade: formData.cidade,
+            estado: formData.estado,
+            cep: formData.cep
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh client list
+          fetchClients()
+        } else {
+          console.error('Failed to update client')
+        }
+      } else {
+        // Add new client
+        const response = await fetch('/api/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nome: formData.nome.toLocaleUpperCase(),
+            email: formData.email,
+            cpf: formData.cpf,
+            rg: formData.rg,
+            telefone: formData.telefone,
+            endereco: formData.endereco,
+            numero: formData.numero,
+            semNumero: formData.semNumero,
+            complemento: formData.complemento,
+            bairro: formData.bairro,
+            cidade: formData.cidade,
+            estado: formData.estado,
+            cep: formData.cep
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh client list
+          fetchClients()
+        } else {
+          console.error('Failed to create client')
+        }
       }
       
-      setClients((prev: any[]) => [...prev, newClient])
-      
-      // Save to localStorage
-      const storedClients = JSON.parse(localStorage.getItem('clients') || '[]')
-      storedClients.push(newClient)
-      localStorage.setItem('clients', JSON.stringify(storedClients))
+      // Reset form and close dialog
+      setFormData({
+        nome: '',
+        cpf: '',
+        rg: '',
+        email: '',
+        telefone: '',
+        endereco: '',
+        numero: '',
+        semNumero: false,
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        cep: ''
+      })
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
     }
-    
-    // Reset form and close dialog
-    setFormData({
-      nome: '',
-      cpf: '',
-      rg: '',
-      email: '',
-      telefone: '',
-      endereco: '',
-      numero: '',
-      semNumero: false,
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      estado: '',
-      cep: ''
-    })
-    setIsDialogOpen(false)
   }
 
   return (
@@ -424,7 +437,6 @@ export default function ClientContent() {
                   </div>
                 </div>
                 
-                
                 <div className="space-y-2">
                   <Label htmlFor="bairro">Bairro</Label>
                   <Input 
@@ -470,7 +482,7 @@ export default function ClientContent() {
                   variant="destructive" 
                   onClick={() => {
                     if (currentClientId) {
-                      handleDeleteClient(currentClientId)
+                      currentClientId && handleDeleteClient(currentClientId)
                       setIsDialogOpen(false)
                     }
                   }}

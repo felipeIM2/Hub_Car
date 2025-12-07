@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Client model
+model Client {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  nome        String
+  cpf         String
+  rg          String
+  email       String
+  telefone    String
+  endereco    String
+  numero      String
+  semNumero   Boolean
+  complemento String
+  bairro      String
+  cidade      String
+  estado      String
+  cep         String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Vehicle model
+model Vehicle {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  placa     String   @unique
+  modelo    String
+  ano       String
+  kmInicial String
+  kmAtual   String
+  marca     String
+  cor       String
+  renavam   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Part model
+model Part {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  descricao  String
+  valor      Float
+  quantidade Int
+  utilizados Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Contract model
+model Contract {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  idcliente      String   @db.ObjectId
+  idveiculo      String   @db.ObjectId
+  cliente_nome   String
+  data_inicio    DateTime
+  data_final     DateTime
+  contrato_modelo String
+  data_criacao   DateTime @default(now())
+  hora_entrega   String
+  valor_locacao  Float
+  franquia       String
+  caucao         String
+  numero_contrato Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Maintenance model
+model Maintenance {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  idveiculo       String           @db.ObjectId
+  veiculo         String
+  placa           String
+  datainicio      DateTime
+  datafinal       DateTime
+  valorManutencao Float
+  valorServico    Float
+  total           Float
+  status          String
+  descricao       String
+  pecas           MaintenancePart[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+// MaintenancePart embedded document
+type MaintenancePart {
+  partId    String  @db.ObjectId
+  descricao String
+  valor     Float
+  quantidade Int
+  subtotal  Float
+}
+
+// Lease model
+model Lease {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  idcliente    String   @db.ObjectId
+  idveiculo    String   @db.ObjectId
+  cliente_nome String
+  veiculo_info String
+  kmatual      String
+  kmrodado     String
+  franquia     String
+  valor        String
+  datainicial  DateTime
+  datafinal    DateTime
+  status       String
+  data_criacao DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

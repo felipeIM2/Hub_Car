@@ -28,7 +28,7 @@ import ModelA from "./modelContract/modelA"
 
 // Define types
 type Client = {
-  id: number
+  id: string
   nome: string
   cpf: string
   rg: string
@@ -45,7 +45,7 @@ type Client = {
 }
 
 type Vehicle = {
-  id: number
+  id: string
   placa: string
   modelo: string
   ano: string
@@ -57,12 +57,12 @@ type Vehicle = {
 }
 
 type Contract = {
-  id: number
-  idcliente: number
-  idveiculo: number
+  id: string
+  idcliente: string
+  idveiculo: string
   cliente_nome: string
-  data_inicio: string
-  data_final: string
+  data_inicio: string // ISO format date string
+  data_final: string   // ISO format date string
   contrato_modelo: string
   data_criacao: string
   hora_entrega: string
@@ -72,23 +72,76 @@ type Contract = {
   numero_contrato: number
 }
 
-export default function ContractContent() {
-  // Load contracts from localStorage
-  const [contracts, setContracts] = useState<Contract[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('contracts')
-      return saved ? JSON.parse(saved) : []
-    }
-    return []
-  })
+// Helper function to format date for input fields (YYYY-MM-DD)
+const formatDateForInput = (dateString: string): string => {
+  if (!dateString) return '';
+  // If it's already in YYYY-MM-DD format, return as is
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+  // Otherwise convert from ISO string to YYYY-MM-DD
+  return dateString.split('T')[0];
+};
 
-  // Load clients and vehicles for select options
+// Helper function to ensure date is stored as proper ISO string
+const formatToISODate = (dateString: string): string => {
+  if (!dateString) return '';
+  // If it's already a full ISO date string, return as is
+  if (dateString.includes('T')) {
+    return dateString;
+  }
+  // If it's in YYYY-MM-DD format, convert to ISO with time
+  return new Date(dateString + 'T12:00:00').toISOString();
+};
+
+export default function ContractContent() {
+  const [contracts, setContracts] = useState<Contract[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   
+  // Fetch contracts from API
+  const fetchContracts = async () => {
+    try {
+      const response = await fetch('/api/contracts')
+      const data = await response.json()
+      setContracts(data)
+    } catch (error) {
+      console.error('Error fetching contracts:', error)
+    }
+  }
+
+  // Fetch clients from API
+  const fetchClients = async () => {
+    try {
+      const response = await fetch('/api/clients')
+      const data = await response.json()
+      setClients(data)
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+    }
+  }
+
+  // Fetch vehicles from API
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch('/api/vehicles')
+      const data = await response.json()
+      setVehicles(data)
+    } catch (error) {
+      console.error('Error fetching vehicles:', error)
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchContracts()
+    fetchClients()
+    fetchVehicles()
+  }, [])
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentContractId, setCurrentContractId] = useState<number | null>(null)
+  const [currentContractId, setCurrentContractId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     idcliente: '',
     idveiculo: '',
@@ -104,26 +157,8 @@ export default function ContractContent() {
   })
   const [errorMessage, setErrorMessage] = useState('')
 
-  // Load clients and vehicles from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedClients = localStorage.getItem('clients')
-      const savedVehicles = localStorage.getItem('vehicles')
-      
-      setClients(savedClients ? JSON.parse(savedClients) : [])
-      setVehicles(savedVehicles ? JSON.parse(savedVehicles) : [])
-    }
-  }, [])
-
-  // Save contracts to localStorage whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('contracts', JSON.stringify(contracts))
-    }
-  }, [contracts])
-
   const handleSelectClient = (clientId: string) => {
-    const client = clients.find((c) => c.id === parseInt(clientId))
+    const client = clients.find((c) => c.id === clientId)
     setFormData(prev => ({
       ...prev,
       idcliente: clientId,
@@ -132,7 +167,7 @@ export default function ContractContent() {
   }
 
   const handleSelectVehicle = (vehicleId: string) => {
-    const vehicle = vehicles.find((v) => v.id === parseInt(vehicleId))
+    const vehicle = vehicles.find((v) => v.id === vehicleId)
     setFormData(prev => ({
       ...prev,
       idveiculo: vehicleId
@@ -194,11 +229,11 @@ export default function ContractContent() {
     setIsEditing(true)
     setCurrentContractId(contract.id)
     setFormData({
-      idcliente: contract.idcliente?.toString() || '',
-      idveiculo: contract.idveiculo?.toString() || '',
+      idcliente: contract.idcliente || '',
+      idveiculo: contract.idveiculo || '',
       cliente_nome: contract.cliente_nome || '',
-      data_inicio: contract.data_inicio || '',
-      data_final: contract.data_final || '',
+      data_inicio: contract.data_inicio || '', // ISO format
+      data_final: contract.data_final || '',   // ISO format
       contrato_modelo: contract.contrato_modelo || '',
       hora_entrega: contract.hora_entrega || '',
       valor_locacao: contract.valor_locacao || '',
@@ -210,13 +245,24 @@ export default function ContractContent() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteContract = (contractId: number) => {
-    setContracts(prev => prev.filter((contract) => contract.id !== contractId))
+  const handleDeleteContract = async (contractId: string) => {
+    try {
+      const response = await fetch(`/api/contracts/${contractId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Refresh contract list
+        fetchContracts()
+      } else {
+        console.error('Failed to delete contract')
+      }
+    } catch (error) {
+      console.error('Error deleting contract:', error)
+    }
   }
 
-
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Validate required fields
@@ -232,72 +278,97 @@ export default function ContractContent() {
       return
     }
     
-    if (isEditing && currentContractId) {
-      // Update existing contract
-      setContracts(prev => prev.map((contract) => 
-        contract.id === currentContractId 
-          ? {
-              ...contract,
-              idcliente: parseInt(formData.idcliente),
-              idveiculo: parseInt(formData.idveiculo),
-              cliente_nome: formData.cliente_nome,
-              data_inicio: formData.data_inicio,
-              data_final: formData.data_final,
-              contrato_modelo: formData.contrato_modelo,
-              hora_entrega: formData.hora_entrega,
-              valor_locacao: formData.valor_locacao,
-              franquia: formData.franquia,
-              caucao: formData.caucao,
-              numero_contrato: formData.numero_contrato
-            }
-          : contract
-      ))
-    } else {
-      // Add new contract
-      const newContract: Contract = {
-        id: Date.now(),
-        idcliente: parseInt(formData.idcliente),
-        idveiculo: parseInt(formData.idveiculo),
-        cliente_nome: formData.cliente_nome,
-        data_inicio: formData.data_inicio,
-        data_final: formData.data_final,
-        contrato_modelo: formData.contrato_modelo,
-        data_criacao: new Date().toISOString(),
-        hora_entrega: formData.hora_entrega,
-        valor_locacao: formData.valor_locacao,
-        franquia: formData.franquia,
-        caucao: formData.caucao,
-        numero_contrato: formData.numero_contrato
+    // Format dates to ensure proper ISO format without timezone issues
+    const formattedStartDate = formatToISODate(formData.data_inicio);
+    const formattedEndDate = formatToISODate(formData.data_final);
+    
+    try {
+      if (isEditing && currentContractId) {
+        // Update existing contract
+        const response = await fetch(`/api/contracts/${currentContractId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idcliente: formData.idcliente,
+            idveiculo: formData.idveiculo,
+            cliente_nome: formData.cliente_nome,
+            data_inicio: formattedStartDate, // ISO format
+            data_final: formattedEndDate,   // ISO format
+            contrato_modelo: formData.contrato_modelo,
+            hora_entrega: formData.hora_entrega,
+            valor_locacao: parseFloat(formData.valor_locacao),
+            franquia: formData.franquia,
+            caucao: formData.caucao,
+            numero_contrato: formData.numero_contrato
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh contract list
+          fetchContracts()
+        } else {
+          console.error('Failed to update contract')
+        }
+      } else {
+        // Add new contract
+        const response = await fetch('/api/contracts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idcliente: formData.idcliente,
+            idveiculo: formData.idveiculo,
+            cliente_nome: formData.cliente_nome,
+            data_inicio: formattedStartDate, // ISO format
+            data_final: formattedEndDate,   // ISO format
+            contrato_modelo: formData.contrato_modelo,
+            hora_entrega: formData.hora_entrega,
+            valor_locacao: parseFloat(formData.valor_locacao),
+            franquia: formData.franquia,
+            caucao: formData.caucao,
+            numero_contrato: formData.numero_contrato
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh contract list
+          fetchContracts()
+        } else {
+          console.error('Failed to create contract')
+        }
       }
       
-      setContracts(prev => [...prev, newContract])
+      // Reset form and close dialog
+      // Generate the next contract number for the next contract
+      const nextContractNumber = contracts.length > 0 
+        ? Math.max(...contracts.map(c => c.numero_contrato)) + 1 
+        : 1
+        
+      setFormData({
+        idcliente: '',
+        idveiculo: '',
+        cliente_nome: '',
+        data_inicio: '',
+        data_final: '',
+        contrato_modelo: '',
+        hora_entrega: '',
+        valor_locacao: '',
+        franquia: '',
+        caucao: '',
+        numero_contrato: nextContractNumber
+      })
+      setErrorMessage('')
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
     }
-    
-    // Reset form and close dialog
-    // Generate the next contract number for the next contract
-    const nextContractNumber = contracts.length > 0 
-      ? Math.max(...contracts.map(c => c.numero_contrato)) + 1 
-      : 1
-      
-    setFormData({
-      idcliente: '',
-      idveiculo: '',
-      cliente_nome: '',
-      data_inicio: '',
-      data_final: '',
-      contrato_modelo: '',
-      hora_entrega: '',
-      valor_locacao: '',
-      franquia: '',
-      caucao: '',
-      numero_contrato: nextContractNumber
-    })
-    setErrorMessage('')
-    setIsDialogOpen(false)
   }
 
 
-const handleGenerateContract = async (contractId: number) => {
+const handleGenerateContract = async (contractId: string) => {
 
     let contractToPdf = contracts.find((contract) => contract.id === contractId);
     let clientContract = clients.find((client) => client.id === contractToPdf?.idcliente);
@@ -338,7 +409,7 @@ const handleGenerateContract = async (contractId: number) => {
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
+                    <SelectItem key={client.id} value={client.id}>
                       {client.nome}
                     </SelectItem>
                   ))}
@@ -357,7 +428,7 @@ const handleGenerateContract = async (contractId: number) => {
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
                       {vehicle.marca} - {vehicle.placa}
                     </SelectItem>
                   ))}
@@ -372,7 +443,7 @@ const handleGenerateContract = async (contractId: number) => {
                   id="startDate" 
                   name="data_inicio" 
                   type="date"
-                  value={formData.data_inicio} 
+                  value={formatDateForInput(formData.data_inicio)} 
                   onChange={handleInputChange} 
                   required 
                 />
@@ -384,7 +455,7 @@ const handleGenerateContract = async (contractId: number) => {
                   id="endDate" 
                   name="data_final" 
                   type="date"
-                  value={formData.data_final} 
+                  value={formatDateForInput(formData.data_final)} 
                   onChange={handleInputChange} 
                   required 
                 />
@@ -508,9 +579,9 @@ const handleGenerateContract = async (contractId: number) => {
               <TableRow key={contract.id}>
                 <TableCell className="font-medium">{contract.numero_contrato}</TableCell>
                 <TableCell className="font-medium">{contract.cliente_nome}</TableCell>
-                <TableCell>{new Date(contract.data_criacao).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(contract.data_inicio).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(contract.data_final).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(contract.data_criacao).toLocaleDateString('pt-BR')}</TableCell>
+                <TableCell>{new Date(contract.data_inicio).toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell>{new Date(contract.data_final).toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>Modelo {contract.contrato_modelo}</TableCell>
                 <TableCell>
                   <Button 

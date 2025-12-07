@@ -15,17 +15,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pencil, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function PartContent() {
-  let listParts = JSON.parse(localStorage.getItem('parts') || '[]')
-  console.log(listParts)
+  const [parts, setParts] = useState<any[]>([])
 
-  const [parts, setParts] = useState(listParts)
+  // Fetch parts from API
+  const fetchParts = async () => {
+    try {
+      const response = await fetch('/api/parts')
+      const data = await response.json()
+      setParts(data)
+    } catch (error) {
+      console.error('Error fetching parts:', error)
+    }
+  }
+
+  // Load parts on component mount
+  useEffect(() => {
+    fetchParts()
+  }, [])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentPartId, setCurrentPartId] = useState<number | null>(null)
+  const [currentPartId, setCurrentPartId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     descricao: '',
     valor: '',
@@ -75,72 +88,82 @@ export default function PartContent() {
     setIsDialogOpen(true)
   }
 
-  const handleDeletePart = (partId: number) => {
-    setParts((prev: any) => prev.filter((part: any) => part.id !== partId))
-    
-    // Also remove from localStorage
-    const storedParts = JSON.parse(localStorage.getItem('parts') || '[]')
-    const updatedParts = storedParts.filter((part: any) => part.id !== partId)
-    localStorage.setItem('parts', JSON.stringify(updatedParts))
+  const handleDeletePart = async (partId: string) => {
+    try {
+      const response = await fetch(`/api/parts/${partId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Refresh parts list
+        fetchParts()
+      } else {
+        console.error('Failed to delete part')
+      }
+    } catch (error) {
+      console.error('Error deleting part:', error)
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (isEditing && currentPartId) {
-      // Update existing part
-      setParts((prev: any[]) => prev.map((part: any) => 
-        part.id === currentPartId 
-          ? {
-              ...part,
-              descricao: formData.descricao.toLocaleUpperCase(),
-              valor: formData.valor,
-              quantidade: formData.quantidade,
-              utilizados: formData.utilizados
-            }
-          : part
-      ))
-      
-      // Update in localStorage
-      const storedParts = JSON.parse(localStorage.getItem('parts') || '[]')
-      const updatedParts = storedParts.map((part: any) => 
-        part.id === currentPartId 
-          ? {
-              ...part,
-              descricao: formData.descricao.toLocaleUpperCase(),
-              valor: formData.valor,
-              quantidade: formData.quantidade,
-              utilizados: formData.utilizados
-            }
-          : part
-      )
-      localStorage.setItem('parts', JSON.stringify(updatedParts))
-    } else {
-      // Add new part
-      const newPart = {
-        id: Date.now(),
-        descricao: formData.descricao.toLocaleUpperCase(),
-        valor: formData.valor,
-        quantidade: formData.quantidade,
-        utilizados: formData.utilizados
+    try {
+      if (isEditing && currentPartId) {
+        // Update existing part
+        const response = await fetch(`/api/parts/${currentPartId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            descricao: formData.descricao.toLocaleUpperCase(),
+            valor: parseFloat(formData.valor),
+            quantidade: parseInt(formData.quantidade),
+            utilizados: parseInt(formData.utilizados)
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh parts list
+          fetchParts()
+        } else {
+          console.error('Failed to update part')
+        }
+      } else {
+        // Add new part
+        const response = await fetch('/api/parts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            descricao: formData.descricao.toLocaleUpperCase(),
+            valor: parseFloat(formData.valor),
+            quantidade: parseInt(formData.quantidade),
+            utilizados: parseInt(formData.utilizados)
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh parts list
+          fetchParts()
+        } else {
+          console.error('Failed to create part')
+        }
       }
       
-      setParts((prev: any[]) => [...prev, newPart])
-      
-      // Save to localStorage
-      const storedParts = JSON.parse(localStorage.getItem('parts') || '[]')
-      storedParts.push(newPart)
-      localStorage.setItem('parts', JSON.stringify(storedParts))
+      // Reset form and close dialog
+      setFormData({
+        descricao: '',
+        valor: '',
+        quantidade: '',
+        utilizados: ''
+      })
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
     }
-    
-    // Reset form and close dialog
-    setFormData({
-      descricao: '',
-      valor: '',
-      quantidade: '',
-      utilizados: ''
-    })
-    setIsDialogOpen(false)
   }
 
   return (

@@ -15,17 +15,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pencil, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function VehicleContent() {
 
-  let vehicleList = JSON.parse(localStorage.getItem('vehicles') || '[]')
+  const [vehicles, setVehicles] = useState<any[]>([])
 
-  const [vehicles, setVehicles] = useState(vehicleList)
+  // Fetch vehicles from API
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch('/api/vehicles')
+      const data = await response.json()
+      setVehicles(data)
+    } catch (error) {
+      console.error('Error fetching vehicles:', error)
+    }
+  }
+
+  // Load vehicles on component mount
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentVehicleId, setCurrentVehicleId] = useState<number | null>(null)
+  const [currentVehicleId, setCurrentVehicleId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     placa: '',
     modelo: '',
@@ -111,23 +125,31 @@ export default function VehicleContent() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteVehicle = (vehicleId: number) => {
-    setVehicles((prev:any) => prev.filter((vehicle: any) => vehicle.id !== vehicleId))
-    
-    // Also remove from localStorage
-    const storedVehicles = JSON.parse(localStorage.getItem('vehicles') || '[]')
-    const updatedVehicles = storedVehicles.filter((vehicle: any) => vehicle.id !== vehicleId)
-    localStorage.setItem('vehicles', JSON.stringify(updatedVehicles))
+  const handleDeleteVehicle = async (vehicleId: string) => {
+    try {
+      const response = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Refresh vehicle list
+        fetchVehicles()
+      } else {
+        console.error('Failed to delete vehicle')
+      }
+    } catch (error) {
+      console.error('Error deleting vehicle:', error)
+    }
   }
 
-  const validatePlate = (plate: string, editingId: number | null = null) => {
+  const validatePlate = (plate: string, editingId: string | null = null) => {
     // Check if plate already exists (excluding the vehicle being edited)
     return !vehicles.some((vehicle: any) => 
       vehicle.placa === plate && vehicle.id !== editingId
     )
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Format plate to uppercase and remove spaces
@@ -141,77 +163,75 @@ export default function VehicleContent() {
       }
     }
     
-    if (isEditing && currentVehicleId) {
-      // Update existing vehicle
-      setVehicles((prev: any[]) => prev.map((vehicle: any) => 
-        vehicle.id === currentVehicleId 
-          ? {
-              ...vehicle,
-              placa: formattedPlate,
-              modelo: formData.modelo,
-              ano: formData.ano,
-              kmInicial: formData.kmInicial,
-              kmAtual: formData.kmAtual,
-              marca: formData.marca,
-              cor: formData.cor,
-              renavam: formData.renavam
-            }
-          : vehicle
-      ))
-      
-      // Update in localStorage
-      const storedVehicles = JSON.parse(localStorage.getItem('vehicles') || '[]')
-      const updatedVehicles = storedVehicles.map((vehicle: any) => 
-        vehicle.id === currentVehicleId 
-          ? {
-              ...vehicle,
-              placa: formattedPlate,
-              modelo: formData.modelo,
-              ano: formData.ano,
-              kmInicial: formData.kmInicial,
-              kmAtual: formData.kmAtual,
-              marca: formData.marca,
-              cor: formData.cor,
-              renavam: formData.renavam
-            }
-          : vehicle
-      )
-      localStorage.setItem('vehicles', JSON.stringify(updatedVehicles))
-    } else {
-      // Add new vehicle
-      const newVehicle = {
-        id: Date.now(),
-        placa: formattedPlate,
-        modelo: formData.modelo,
-        ano: formData.ano,
-        kmInicial: formData.kmInicial,
-        kmAtual: formData.kmAtual,
-        marca: formData.marca,
-        cor: formData.cor,
-        renavam: formData.renavam
+    try {
+      if (isEditing && currentVehicleId) {
+        // Update existing vehicle
+        const response = await fetch(`/api/vehicles/${currentVehicleId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            placa: formattedPlate,
+            modelo: formData.modelo,
+            ano: formData.ano,
+            kmInicial: formData.kmInicial,
+            kmAtual: formData.kmAtual,
+            marca: formData.marca,
+            cor: formData.cor,
+            renavam: formData.renavam
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh vehicle list
+          fetchVehicles()
+        } else {
+          console.error('Failed to update vehicle')
+        }
+      } else {
+        // Add new vehicle
+        const response = await fetch('/api/vehicles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            placa: formattedPlate,
+            modelo: formData.modelo,
+            ano: formData.ano,
+            kmInicial: formData.kmInicial,
+            kmAtual: formData.kmAtual,
+            marca: formData.marca,
+            cor: formData.cor,
+            renavam: formData.renavam
+          }),
+        })
+        
+        if (response.ok) {
+          // Refresh vehicle list
+          fetchVehicles()
+        } else {
+          console.error('Failed to create vehicle')
+        }
       }
       
-      setVehicles((prev: any[]) => [...prev, newVehicle])
-      
-      // Save to localStorage
-      const storedVehicles = JSON.parse(localStorage.getItem('vehicles') || '[]')
-      storedVehicles.push(newVehicle)
-      localStorage.setItem('vehicles', JSON.stringify(storedVehicles))
+      // Reset form and close dialog
+      setFormData({
+        placa: '',
+        modelo: '',
+        ano: '',
+        kmInicial: '',
+        kmAtual: '',
+        marca: '',
+        cor: '',
+        renavam: ''
+      })
+      setErrorMessage('')
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error submitting form:', error)
     }
-    
-    // Reset form and close dialog
-    setFormData({
-      placa: '',
-      modelo: '',
-      ano: '',
-      kmInicial: '',
-      kmAtual: '',
-      marca: '',
-      cor: '',
-      renavam: ''
-    })
-    setErrorMessage('')
-    setIsDialogOpen(false)
   }
 
   return (

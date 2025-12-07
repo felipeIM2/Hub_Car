@@ -20,7 +20,7 @@ interface Profile01Props {
 const defaultProfile = {
   name: "Luis Felipe",
   role: "Font-end Developer",
-  avatar: "https://ferf1mheo22r9ira.public.blob.vercel-storage.com/avatar-02-albo9B0tWOSLXCVZh9rX9KFxXIVWMr.png",
+  avatar: "",
   subscription: "Removido por mim!",
 } satisfies Required<Profile01Props>
 
@@ -56,14 +56,14 @@ export default function Profile01({
       <div className="relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800">
         <div className="relative px-6 pt-12 pb-6">
           <div className="flex items-center gap-4 mb-8">
-            <div className="relative shrink-0">
-              <Image
+            <div className="relative shrink-0 ml-[15px] mr-[10px]">
+              {/* <Image
                 src={avatar}
                 alt={name}
                 width={72}
                 height={72}
                 className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover"
-              />
+              /> */}
               <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
             </div>
 
