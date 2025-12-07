@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/database/client'
 
+// Helper function to set CORS headers
+function setCORSHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 })
+  return setCORSHeaders(response)
+}
+
 // GET /api/contracts - Get all contracts
 export async function GET() {
   try {
@@ -9,10 +23,16 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
-    return NextResponse.json(contracts)
-  } catch (error) {
+    const response = NextResponse.json(contracts)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error fetching contracts:', error)
-    return NextResponse.json({ error: 'Failed to fetch contracts' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to fetch contracts', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
 
@@ -37,10 +57,15 @@ export async function POST(request: Request) {
       }
     })
     
-    return NextResponse.json(contract)
-  } catch (error) {
+    const response = NextResponse.json(contract)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error creating contract:', error)
-    return NextResponse.json({ error: 'Failed to create contract' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to create contract', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
-

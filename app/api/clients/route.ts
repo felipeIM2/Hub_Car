@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/database/client'
 
+// Helper function to set CORS headers
+function setCORSHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 })
+  return setCORSHeaders(response)
+}
+
 // GET /api/clients - Get all clients
 export async function GET() {
   try {
@@ -9,10 +23,16 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
-    return NextResponse.json(clients)
-  } catch (error) {
+    const response = NextResponse.json(clients)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error fetching clients:', error)
-    return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to fetch clients', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
 
@@ -39,10 +59,15 @@ export async function POST(request: Request) {
       }
     })
     
-    return NextResponse.json(client)
-  } catch (error) {
+    const response = NextResponse.json(client)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error creating client:', error)
-    return NextResponse.json({ error: 'Failed to create client' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to create client', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
-

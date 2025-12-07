@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/database/client'
 
+// Helper function to set CORS headers
+function setCORSHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 })
+  return setCORSHeaders(response)
+}
+
 // GET /api/maintenances - Get all maintenances
 export async function GET() {
   try {
@@ -9,10 +23,16 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
-    return NextResponse.json(maintenances)
-  } catch (error) {
+    const response = NextResponse.json(maintenances)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error fetching maintenances:', error)
-    return NextResponse.json({ error: 'Failed to fetch maintenances' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to fetch maintenances', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
 
@@ -37,10 +57,15 @@ export async function POST(request: Request) {
       }
     })
     
-    return NextResponse.json(maintenance)
-  } catch (error) {
+    const response = NextResponse.json(maintenance)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error creating maintenance:', error)
-    return NextResponse.json({ error: 'Failed to create maintenance' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to create maintenance', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
-

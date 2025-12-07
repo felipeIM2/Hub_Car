@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/database/client'
 
+// Helper function to set CORS headers
+function setCORSHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 })
+  return setCORSHeaders(response)
+}
+
 // GET /api/vehicles - Get all vehicles
 export async function GET() {
   try {
@@ -9,10 +23,16 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
-    return NextResponse.json(vehicles)
-  } catch (error) {
+    const response = NextResponse.json(vehicles)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error fetching vehicles:', error)
-    return NextResponse.json({ error: 'Failed to fetch vehicles' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to fetch vehicles', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
 
@@ -34,10 +54,15 @@ export async function POST(request: Request) {
       }
     })
     
-    return NextResponse.json(vehicle)
-  } catch (error) {
+    const response = NextResponse.json(vehicle)
+    return setCORSHeaders(response)
+  } catch (error: any) {
     console.error('Error creating vehicle:', error)
-    return NextResponse.json({ error: 'Failed to create vehicle' }, { status: 500 })
+    const response = NextResponse.json({ 
+      error: 'Failed to create vehicle', 
+      message: error.message,
+      code: error.code
+    }, { status: 500 })
+    return setCORSHeaders(response)
   }
 }
-
