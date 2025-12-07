@@ -18,6 +18,9 @@ export async function OPTIONS() {
 // GET /api/vehicles/:id - Get a single vehicle
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Test database connection first
+    await prisma.$connect()
+    
     const { id } = await params
     
     if (!id) {
@@ -38,11 +41,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return setCORSHeaders(response)
   } catch (error: any) {
     console.error('Error fetching vehicle:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to fetch vehicle'
+    let errorStatus = 500
+    
+    if (error.code === 'P1001') {
+      errorMessage = 'Cannot connect to database. Please check your connection settings.'
+      errorStatus = 503
+    } else if (error.message?.includes('Server selection timeout')) {
+      errorMessage = 'Database connection timeout. The database server may be unavailable.'
+      errorStatus = 503
+    }
+    
     const response = NextResponse.json({ 
-      error: 'Failed to fetch vehicle', 
+      error: errorMessage, 
       message: error.message,
       code: error.code
-    }, { status: 500 })
+    }, { status: errorStatus })
     return setCORSHeaders(response)
   }
 }
@@ -50,6 +66,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 // PUT /api/vehicles/:id - Update a vehicle
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Test database connection first
+    await prisma.$connect()
+    
     const { id } = await params
     
     if (!id) {
@@ -77,11 +96,30 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return setCORSHeaders(response)
   } catch (error: any) {
     console.error('Error updating vehicle:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to update vehicle'
+    let errorStatus = 500
+    
+    if (error.code === 'P1001') {
+      errorMessage = 'Cannot connect to database. Please check your connection settings.'
+      errorStatus = 503
+    } else if (error.code === 'P2025') {
+      errorMessage = 'Vehicle not found'
+      errorStatus = 404
+    } else if (error.code === 'P2002') {
+      errorMessage = 'A vehicle with this plate already exists.'
+      errorStatus = 409
+    } else if (error.message?.includes('Server selection timeout')) {
+      errorMessage = 'Database connection timeout. The database server may be unavailable.'
+      errorStatus = 503
+    }
+    
     const response = NextResponse.json({ 
-      error: 'Failed to update vehicle', 
+      error: errorMessage, 
       message: error.message,
       code: error.code
-    }, { status: 500 })
+    }, { status: errorStatus })
     return setCORSHeaders(response)
   }
 }
@@ -89,6 +127,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 // DELETE /api/vehicles/:id - Delete a vehicle
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Test database connection first
+    await prisma.$connect()
+    
     const { id } = await params
     
     if (!id) {
@@ -104,11 +145,27 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return setCORSHeaders(response)
   } catch (error: any) {
     console.error('Error deleting vehicle:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to delete vehicle'
+    let errorStatus = 500
+    
+    if (error.code === 'P1001') {
+      errorMessage = 'Cannot connect to database. Please check your connection settings.'
+      errorStatus = 503
+    } else if (error.code === 'P2025') {
+      errorMessage = 'Vehicle not found'
+      errorStatus = 404
+    } else if (error.message?.includes('Server selection timeout')) {
+      errorMessage = 'Database connection timeout. The database server may be unavailable.'
+      errorStatus = 503
+    }
+    
     const response = NextResponse.json({ 
-      error: 'Failed to delete vehicle', 
+      error: errorMessage, 
       message: error.message,
       code: error.code
-    }, { status: 500 })
+    }, { status: errorStatus })
     return setCORSHeaders(response)
   }
 }

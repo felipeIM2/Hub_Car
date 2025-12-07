@@ -18,6 +18,9 @@ export async function OPTIONS() {
 // GET /api/vehicles - Get all vehicles
 export async function GET() {
   try {
+    // Test database connection first
+    await prisma.$connect()
+    
     const vehicles = await prisma.vehicle.findMany({
       orderBy: {
         createdAt: 'desc'
@@ -27,11 +30,27 @@ export async function GET() {
     return setCORSHeaders(response)
   } catch (error: any) {
     console.error('Error fetching vehicles:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to fetch vehicles'
+    let errorStatus = 500
+    
+    if (error.code === 'P1001') {
+      errorMessage = 'Cannot connect to database. Please check your connection settings.'
+      errorStatus = 503
+    } else if (error.code === 'P1013') {
+      errorMessage = 'Invalid database connection string. Please check your DATABASE_URL.'
+      errorStatus = 500
+    } else if (error.message?.includes('Server selection timeout')) {
+      errorMessage = 'Database connection timeout. The database server may be unavailable.'
+      errorStatus = 503
+    }
+    
     const response = NextResponse.json({ 
-      error: 'Failed to fetch vehicles', 
+      error: errorMessage, 
       message: error.message,
       code: error.code
-    }, { status: 500 })
+    }, { status: errorStatus })
     return setCORSHeaders(response)
   }
 }
@@ -39,6 +58,9 @@ export async function GET() {
 // POST /api/vehicles - Create a new vehicle
 export async function POST(request: Request) {
   try {
+    // Test database connection first
+    await prisma.$connect()
+    
     const body = await request.json()
     
     const vehicle = await prisma.vehicle.create({
@@ -58,11 +80,27 @@ export async function POST(request: Request) {
     return setCORSHeaders(response)
   } catch (error: any) {
     console.error('Error creating vehicle:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to create vehicle'
+    let errorStatus = 500
+    
+    if (error.code === 'P1001') {
+      errorMessage = 'Cannot connect to database. Please check your connection settings.'
+      errorStatus = 503
+    } else if (error.code === 'P2002') {
+      errorMessage = 'A vehicle with this plate already exists.'
+      errorStatus = 409
+    } else if (error.message?.includes('Server selection timeout')) {
+      errorMessage = 'Database connection timeout. The database server may be unavailable.'
+      errorStatus = 503
+    }
+    
     const response = NextResponse.json({ 
-      error: 'Failed to create vehicle', 
+      error: errorMessage, 
       message: error.message,
       code: error.code
-    }, { status: 500 })
+    }, { status: errorStatus })
     return setCORSHeaders(response)
   }
 }
