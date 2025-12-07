@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server'
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://hub-car.vercel.app', // Your Vercel deployment domain
+  'https://panelhubcar.vercel.app', // Your Vercel deployment domain
   // Add your custom domain here if you have one
 ]
 
