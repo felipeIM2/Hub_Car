@@ -27,6 +27,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     
     const body = await request.json()
     
+    // Fetch the existing lease to check status changes
+    const existingLease = await prisma.lease.findUnique({
+      where: { id }
+    });
+    
+    // Update the lease
     const lease = await prisma.lease.update({
       where: { id },
       data: {
@@ -43,6 +49,68 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         status: body.status
       }
     })
+    
+    // Handle KM updates based on status changes
+    if (existingLease) {
+      // If changing from Concluído to Ativo or Cancelado - subtract kmrodado
+      if (existingLease.status === 'Concluído' && (body.status === 'Ativo' || body.status === 'Cancelado')) {
+        const kmrodado = parseFloat(existingLease.kmrodado || '0') || 0;
+        if (kmrodado > 0) {
+          try {
+            // Fetch the current vehicle data
+            const vehicle = await prisma.vehicle.findUnique({
+              where: { id: existingLease.idveiculo }
+            });
+            
+            if (vehicle) {
+              // Calculate new kmAtual value
+              const currentKm = parseFloat(vehicle.kmAtual) || 0;
+              const newKm = currentKm - kmrodado;
+              
+              // Update the vehicle with new kmAtual value
+              await prisma.vehicle.update({
+                where: { id: existingLease.idveiculo },
+                data: {
+                  kmAtual: newKm.toString()
+                }
+              });
+            }
+          } catch (vehicleError) {
+            console.error('Error updating vehicle KM:', vehicleError);
+            // Don't throw here as we still want to return the updated lease
+          }
+        }
+      } 
+      // If changing to Concluído - add kmrodado
+      else if (existingLease.status !== 'Concluído' && body.status === 'Concluído') {
+        const kmrodado = parseFloat(body.kmrodado || '0') || 0;
+        if (kmrodado > 0) {
+          try {
+            // Fetch the current vehicle data
+            const vehicle = await prisma.vehicle.findUnique({
+              where: { id: body.idveiculo }
+            });
+            
+            if (vehicle) {
+              // Calculate new kmAtual value
+              const currentKm = parseFloat(vehicle.kmAtual) || 0;
+              const newKm = currentKm + kmrodado;
+              
+              // Update the vehicle with new kmAtual value
+              await prisma.vehicle.update({
+                where: { id: body.idveiculo },
+                data: {
+                  kmAtual: newKm.toString()
+                }
+              });
+            }
+          } catch (vehicleError) {
+            console.error('Error updating vehicle KM:', vehicleError);
+            // Don't throw here as we still want to return the updated lease
+          }
+        }
+      }
+    }
     
     const response = NextResponse.json(lease)
     return setCORSHeaders(response)

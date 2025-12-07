@@ -57,6 +57,36 @@ export async function POST(request: Request) {
       }
     })
     
+    // If the lease status is 'Concluído', update the vehicle's kmAtual field
+    if (body.status === 'Concluído' && body.kmrodado) {
+      const kmrodado = parseFloat(body.kmrodado) || 0;
+      if (kmrodado > 0) {
+        try {
+          // Fetch the current vehicle data
+          const vehicle = await prisma.vehicle.findUnique({
+            where: { id: body.idveiculo }
+          });
+          
+          if (vehicle) {
+            // Calculate new kmAtual value
+            const currentKm = parseFloat(vehicle.kmAtual) || 0;
+            const newKm = currentKm + kmrodado;
+            
+            // Update the vehicle with new kmAtual value
+            await prisma.vehicle.update({
+              where: { id: body.idveiculo },
+              data: {
+                kmAtual: newKm.toString()
+              }
+            });
+          }
+        } catch (vehicleError) {
+          console.error('Error updating vehicle KM:', vehicleError);
+          // Don't throw here as we still want to return the created lease
+        }
+      }
+    }
+    
     const response = NextResponse.json(lease)
     return setCORSHeaders(response)
   } catch (error: any) {
