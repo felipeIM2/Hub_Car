@@ -16,19 +16,42 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pencil, Trash2 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { toast } from "@/hooks/use-toast"
 
 export default function VehicleContent() {
 
   const [vehicles, setVehicles] = useState<any[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch vehicles from API
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('/api/vehicles')
+      setLoading(true)
+      setError(null)
+      
+      // Use absolute URL for production environments
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const url = `${baseUrl}/api/vehicles`;
+      
+      const response = await fetch(url)
       const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch vehicles')
+      }
+      
       setVehicles(data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching vehicles:', error)
+      setError(error.message || 'Failed to fetch vehicles. Please try again later.')
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch vehicles. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -127,18 +150,32 @@ export default function VehicleContent() {
 
   const handleDeleteVehicle = async (vehicleId: string) => {
     try {
-      const response = await fetch(`/api/vehicles/${vehicleId}`, {
+      // Use absolute URL for production environments
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const url = `${baseUrl}/api/vehicles/${vehicleId}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
       })
       
       if (response.ok) {
         // Refresh vehicle list
         fetchVehicles()
+        toast({
+          title: "Success",
+          description: "Vehicle deleted successfully",
+        })
       } else {
-        console.error('Failed to delete vehicle')
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to delete vehicle')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting vehicle:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete vehicle",
+        variant: "destructive",
+      })
     }
   }
 
@@ -164,9 +201,13 @@ export default function VehicleContent() {
     }
     
     try {
+      let response
       if (isEditing && currentVehicleId) {
         // Update existing vehicle
-        const response = await fetch(`/api/vehicles/${currentVehicleId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const url = `${baseUrl}/api/vehicles/${currentVehicleId}`;
+        
+        response = await fetch(url, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -182,16 +223,12 @@ export default function VehicleContent() {
             renavam: formData.renavam
           }),
         })
-        
-        if (response.ok) {
-          // Refresh vehicle list
-          fetchVehicles()
-        } else {
-          console.error('Failed to update vehicle')
-        }
       } else {
         // Add new vehicle
-        const response = await fetch('/api/vehicles', {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const url = `${baseUrl}/api/vehicles`;
+        
+        response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -207,30 +244,42 @@ export default function VehicleContent() {
             renavam: formData.renavam
           }),
         })
-        
-        if (response.ok) {
-          // Refresh vehicle list
-          fetchVehicles()
-        } else {
-          console.error('Failed to create vehicle')
-        }
       }
       
-      // Reset form and close dialog
-      setFormData({
-        placa: '',
-        modelo: '',
-        ano: '',
-        kmInicial: '',
-        kmAtual: '',
-        marca: '',
-        cor: '',
-        renavam: ''
-      })
-      setErrorMessage('')
-      setIsDialogOpen(false)
-    } catch (error) {
+      const responseData = await response.json()
+      
+      if (response.ok) {
+        // Refresh vehicle list
+        fetchVehicles()
+        
+        // Reset form and close dialog
+        setFormData({
+          placa: '',
+          modelo: '',
+          ano: '',
+          kmInicial: '',
+          kmAtual: '',
+          marca: '',
+          cor: '',
+          renavam: ''
+        })
+        setErrorMessage('')
+        setIsDialogOpen(false)
+        
+        toast({
+          title: "Success",
+          description: isEditing ? "Vehicle updated successfully" : "Vehicle created successfully",
+        })
+      } else {
+        throw new Error(responseData.message || (isEditing ? 'Failed to update vehicle' : 'Failed to create vehicle'))
+      }
+    } catch (error: any) {
       console.error('Error submitting form:', error)
+      toast({
+        title: "Error",
+        description: error.message || (isEditing ? "Failed to update vehicle" : "Failed to create vehicle"),
+        variant: "destructive",
+      })
     }
   }
 
@@ -239,6 +288,9 @@ export default function VehicleContent() {
       <Button className="mb-4" onClick={handleAddVehicle}>  
         Adicionar
       </Button>
+      
+      {loading && <div>Loading vehicles...</div>}
+      {error && <div className="text-red-500 mb-4">{error}</div>}
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
