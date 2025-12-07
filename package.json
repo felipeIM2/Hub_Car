@@ -52,7 +52,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.454.0",
     "mongodb": "^7.0.0",
-    "next": "^15.5.5",
+    "next": "^16.0.7",
     "next-themes": "latest",
     "node-fetch": "^3.3.2",
     "prisma": "^6.19.0",
