@@ -289,7 +289,7 @@ export default function VehicleContent() {
         Adicionar
       </Button>
       
-      {loading && <div>Loading vehicles...</div>}
+      {/* {loading && <div>Loading vehicles...</div>} */}
       {error && <div className="text-red-500 mb-4">{error}</div>}
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
