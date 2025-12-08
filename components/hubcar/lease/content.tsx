@@ -360,21 +360,6 @@ export default function LeaseContent() {
       }
     }
     
-    // Handle KM updates based on status changes
-    if (leaseToUpdate.status === 'Concluído' && (newStatus === 'Ativo' || newStatus === 'Cancelado')) {
-      // Changing from Concluído to Ativo or Cancelado - subtract kmrodado
-      const kmrodado = parseFloat(leaseToUpdate.kmrodado || '0') || 0;
-      if (kmrodado > 0) {
-        await updateVehicleKM(leaseToUpdate.idveiculo, -kmrodado);
-      }
-    } else if (leaseToUpdate.status !== 'Concluído' && newStatus === 'Concluído') {
-      // Changing to Concluído - add kmrodado
-      const kmrodado = parseFloat(leaseToUpdate.kmrodado || '0') || 0;
-      if (kmrodado > 0) {
-        await updateVehicleKM(leaseToUpdate.idveiculo, kmrodado);
-      }
-    }
-    
     // Update the lease status
     try {
       const response = await fetch(`/api/leases/${leaseId}`, {
@@ -489,9 +474,6 @@ export default function LeaseContent() {
           // Refresh lease list
           fetchLeases()
           
-          // Update vehicle KM
-          await updateVehicleKM(lease.idveiculo, kmValue);
-          
           // Close modal and show success toast
           setIsKmModalOpen(false);
           setCurrentLeaseForKm(null);
@@ -559,24 +541,6 @@ export default function LeaseContent() {
     
     try {
       if (isEditing && currentLeaseId) {
-        // Get the existing lease to check status changes
-        const existingLease = leases.find(lease => lease.id === currentLeaseId);
-        
-        // Handle KM updates based on status changes
-        if (existingLease && existingLease.status === 'Concluído' && (formData.status === 'Ativo' || formData.status === 'Cancelado')) {
-          // Changing from Concluído to Ativo or Cancelado - subtract kmrodado
-          const kmrodado = parseFloat(existingLease.kmrodado || '0') || 0;
-          if (kmrodado > 0) {
-            await updateVehicleKM(formData.idveiculo, -kmrodado);
-          }
-        } else if (existingLease && existingLease.status !== 'Concluído' && formData.status === 'Concluído') {
-          // Changing to Concluído - add kmrodado
-          const kmrodado = parseFloat(formData.kmrodado || '0') || 0;
-          if (kmrodado > 0) {
-            await updateVehicleKM(formData.idveiculo, kmrodado);
-          }
-        }
-        
         // Update existing lease
         const response = await fetch(`/api/leases/${currentLeaseId}`, {
           method: 'PUT',

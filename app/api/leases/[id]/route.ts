@@ -50,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     })
     
-    // Handle KM updates based on status changes
+    // Handle KM updates based on status changes and kmrodado changes
     if (existingLease) {
       // If changing from Concluído to Ativo or Cancelado - subtract kmrodado
       if (existingLease.status === 'Concluído' && (body.status === 'Ativo' || body.status === 'Cancelado')) {
@@ -95,6 +95,41 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
               // Calculate new kmAtual value
               const currentKm = parseFloat(vehicle.kmAtual) || 0;
               const newKm = currentKm + kmrodado;
+              
+              // Update the vehicle with new kmAtual value
+              await prisma.vehicle.update({
+                where: { id: body.idveiculo },
+                data: {
+                  kmAtual: newKm.toString()
+                }
+              });
+            }
+          } catch (vehicleError) {
+            console.error('Error updating vehicle KM:', vehicleError);
+            // Don't throw here as we still want to return the updated lease
+          }
+        }
+      }
+      // If status remains Concluído but kmrodado value changed - adjust vehicle KM accordingly
+      else if (existingLease.status === 'Concluído' && body.status === 'Concluído') {
+        const oldKmrodado = parseFloat(existingLease.kmrodado || '0') || 0;
+        const newKmrodado = parseFloat(body.kmrodado || '0') || 0;
+        
+        // Only update if the kmrodado value actually changed
+        if (oldKmrodado !== newKmrodado && (oldKmrodado > 0 || newKmrodado > 0)) {
+          try {
+            // Fetch the current vehicle data
+            const vehicle = await prisma.vehicle.findUnique({
+              where: { id: body.idveiculo }
+            });
+            
+            if (vehicle) {
+              // Calculate the difference
+              const kmDifference = newKmrodado - oldKmrodado;
+              
+              // Calculate new kmAtual value
+              const currentKm = parseFloat(vehicle.kmAtual) || 0;
+              const newKm = currentKm + kmDifference;
               
               // Update the vehicle with new kmAtual value
               await prisma.vehicle.update({

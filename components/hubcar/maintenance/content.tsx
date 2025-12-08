@@ -500,7 +500,9 @@ export default function MaintenanceContent() {
     if (quantidade > availableQuantity) {
       toast({
         title: "Erro",
-        description: `Quantidade indisponível. Disponível: ${availableQuantity}, Solicitado: ${quantidade}`,
+        description: `Quantidade indisponível. 
+        Disponível: ${availableQuantity}
+        Solicitado: ${quantidade}`,
         variant: "destructive",
       })
       return
