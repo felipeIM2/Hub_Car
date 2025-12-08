@@ -1,10 +1,13 @@
 import Content from "./content"
 import Layout from "../component/layout"
+import ProtectedRoute from "@/components/protected-route"
 
 export default function Dashboard() {
   return (
-    <Layout>
-      <Content />
-    </Layout>
+    <ProtectedRoute>
+      <Layout>
+        <Content />
+      </Layout>
+    </ProtectedRoute>
   )
 }

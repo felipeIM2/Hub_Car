@@ -1,6 +1,7 @@
 import { LogOut, MoveUpRight, Settings, CreditCard, FileText } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useLogout } from '@/lib/logoutHandler'
 
 interface MenuItem {
   label: string
@@ -30,6 +31,7 @@ export default function Profile01({
   avatar = defaultProfile.avatar,
   // subscription = defaultProfile.subscription,
 }: Partial<Profile01Props> = defaultProfile) {
+  const { handleLogout } = useLogout()
   const menuItems: MenuItem[] = [
     // {
     //   label: "Subscription",
@@ -99,6 +101,7 @@ export default function Profile01({
               className="w-full flex items-center justify-between p-2 
                                 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 
                                 rounded-lg transition-colors duration-200"
+              onClick={handleLogout}
             >
               <div className="flex items-center gap-2">
                 <LogOut className="w-4 h-4" />
