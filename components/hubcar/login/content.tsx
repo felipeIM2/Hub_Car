@@ -107,13 +107,13 @@ export default function LoginContent() {
             </Button>
             <div className="mt-4 text-center text-sm">
               Don't have an account?{' '}
-              <button 
+              {/* <button 
                 type="button" 
                 className="text-blue-600 hover:underline"
                 onClick={() => router.push('/register')}
               >
                 Register
-              </button>
+              </button> */}
             </div>
           </CardFooter>
         </form>

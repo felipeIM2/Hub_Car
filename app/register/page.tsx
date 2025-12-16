@@ -38,7 +38,7 @@ export default function RegisterPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        // body: JSON.stringify(formData),
       })
 
       const data = await response.json()
@@ -133,7 +133,7 @@ export default function RegisterPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col">
-            <Button className="w-full" type="submit" disabled={isLoading}>
+            <Button className="w-full" type="submit" disabled={true}>
               {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
             <div className="mt-4 text-center text-sm">

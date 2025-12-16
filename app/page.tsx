@@ -30,13 +30,13 @@ export default function HomePage() {
           >
             Login to Account
           </Button>
-          <Button 
+          {/* <Button 
             size="lg" 
             variant="outline"
             onClick={() => router.push('/register')}
           >
             Create New Account
-          </Button>
+          </Button> */}
         </div>
         
         <div className="mt-12">
