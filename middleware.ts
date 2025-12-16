@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isAuthenticated } from '@/lib/auth'
 
 // Define the allowed origins
 const allowedOrigins = [
@@ -72,14 +73,13 @@ export function middleware(request: NextRequest) {
   const isProtected = isProtectedPath(pathname);
   const isPublic = isPublicPath(pathname);
   
-  // If it's a protected path, check for authentication
+  // If it's a protected path, allow it to proceed
+  // The client-side ProtectedRoute component will handle authentication checks
+  // This prevents the middleware from blocking authenticated requests
   if (isProtected) {
-    // Try to get the user token from cookies (you might want to adjust this based on your auth strategy)
-    // For now, we'll redirect to login since client-side localStorage isn't accessible in middleware
-    // In a real implementation, you'd use JWT tokens in cookies
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    // Let the request proceed to the page
+    // Authentication will be checked client-side by ProtectedRoute component
+    console.log('Protected path accessed, allowing request to proceed to client-side auth check')
   }
   
   // Handle actual requests

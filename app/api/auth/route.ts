@@ -19,6 +19,9 @@ export async function OPTIONS() {
 // POST /api/auth/login - Validate user credentials
 export async function POST(request: Request) {
   try {
+    // Ensure prisma client is connected
+    await prisma.$connect()
+    
     const body = await request.json()
     const { username, password } = body
 
@@ -31,8 +34,7 @@ export async function POST(request: Request) {
       return setCORSHeaders(response)
     }
 
-    // Find user by username
-    // @ts-ignore: Prisma client typing issue - this works correctly
+    // Find user by username only (not by password)
     const user = await prisma.user.findUnique({
       where: {
         username: username

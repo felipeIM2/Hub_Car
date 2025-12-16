@@ -9,7 +9,6 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    // If user is already authenticated, redirect to dashboard
     const authStatus = isAuthenticated()
     if (authStatus) {
       router.replace('/dashboard')

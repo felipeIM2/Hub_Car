@@ -17,7 +17,7 @@ export default function LoginLayout({ children }: LoginLayoutProps) {
   }, [])
 
   if (!mounted) {
-    return null
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
   return (

@@ -38,18 +38,15 @@ export default function LoginContent() {
         // Login successful
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${data.name}!`,
+          description: `Welcome back, ${data.name || data.username}!`,
         })
         
-        // Store user data in localStorage or sessionStorage
-        localStorage.setItem('user', JSON.stringify(data))
-        
-        // Small delay to ensure localStorage is set before redirecting
+        // Store user data in sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(data.id))
         setTimeout(() => {
-          // Redirect to dashboard or home page
-          // Use router.replace instead of router.push to prevent going back to login
-          router.replace('/dashboard')
-        }, 100)
+          
+          window.location.href = '/dashboard'
+        }, 600);
       } else {
         // Login failed
         toast({
