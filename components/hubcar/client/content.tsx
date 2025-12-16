@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Eye, Upload } from "lucide-react"
+import AttachmentViewer from "./attachment-viewer"
 import { useState, useEffect } from "react"
 
 export default function ClientContent() {
@@ -56,6 +57,13 @@ export default function ClientContent() {
     estado: '',
     cep: ''
   })
+  
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false)
+  const [attachments, setAttachments] = useState<File[]>([])
+    const [existingAttachments, setExistingAttachments] = useState<any[]>([])
+    const [attachmentsToRemove, setAttachmentsToRemove] = useState<string[]>([])
+  const [isAttachmentViewerOpen, setIsAttachmentViewerOpen] = useState(false)
+  const [viewerClientId, setViewerClientId] = useState<string | null>(null)
 
   // Format CPF: 000.000.000-00
   const formatCPF = (value: string) => {
@@ -101,13 +109,23 @@ export default function ClientContent() {
 
 
   const formatRG = (value: string) => {
-    // Mantém apenas números e limita a 7 dígitos
-    const digits = value.replace(/\D/g, '').slice(0, 7)
+    // Mantém apenas números e limita a 8 dígitos
+    const digits = value.replace(/\D/g, '').slice(0, 8)
     let formatted = ''
     
-    for (let i = 0; i < digits.length; i++) {
-      if (i === 1 || i === 4) formatted += '.'
-      formatted += digits[i]
+    // Format based on length: 7 digits -> 0.000.000, 8 digits -> 00.000.000
+    if (digits.length <= 7) {
+      // For 7 digits: 0.000.000
+      for (let i = 0; i < digits.length; i++) {
+        if (i === 1 || i === 4) formatted += '.'
+        formatted += digits[i]
+      }
+    } else {
+      // For 8 digits: 00.000.000
+      for (let i = 0; i < digits.length; i++) {
+        if (i === 2 || i === 5) formatted += '.'
+        formatted += digits[i]
+      }
     }
     
     return formatted
@@ -133,10 +151,16 @@ export default function ClientContent() {
         [name]: formatRG(value)
       }))
     } else if (name === 'cep') {
+      const formattedCEP = formatCEP(value)
       setFormData(prev => ({
         ...prev,
-        [name]: formatCEP(value)
+        [name]: formattedCEP
       }))
+      
+      // If CEP is complete (8 digits), fetch address data
+      if (formattedCEP.replace(/\D/g, '').length === 8) {
+        fetchAddressByCEP(formattedCEP)
+      }
     } else if (name === 'numero') {
       // Only allow numbers for numero field
       const numericValue = value.replace(/\D/g, '')
@@ -151,6 +175,37 @@ export default function ClientContent() {
       }))
     }
   }
+  
+  // Function to fetch address data from ViaCEP API
+  const fetchAddressByCEP = async (cep: string) => {
+    const cleanCEP = cep.replace(/\D/g, '')
+    if (cleanCEP.length !== 8) return
+    
+    setIsFetchingAddress(true)
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`)
+      const data = await response.json()
+      
+      // Check if the response contains an error
+      if (data.erro) {
+        console.log('CEP not found')
+        return
+      }
+      
+      // Update form fields with fetched data
+      setFormData(prev => ({
+        ...prev,
+        endereco: data.logradouro || '',
+        bairro: data.bairro || '',
+        cidade: data.localidade || '',
+        estado: data.uf || ''
+      }))
+    } catch (error) {
+      console.error('Error fetching address data:', error)
+    } finally {
+      setIsFetchingAddress(false)
+    }
+  }
 
   const handleCheckboxChange = (checked: boolean) => {
     setFormData(prev => ({
@@ -159,6 +214,48 @@ export default function ClientContent() {
       // When "Sem número" is checked, set numero to "S/N"
       numero: checked ? 'S/N' : prev.numero === 'S/N' ? '' : prev.numero
     }))
+  }
+  
+  // Handle file selection for attachments
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files) {
+      const fileArray = Array.from(files)
+      // Filter for only PDF and PNG files
+      console.log(fileArray)
+      const validFiles = fileArray.filter(file => 
+        file.type === 'application/pdf' || 
+        file.type === 'image/png' || 
+        file.type === 'image/jpeg'
+      )
+      
+      if (validFiles.length !== fileArray.length) {
+        alert('Apenas arquivos PDF, PNG e JPG são permitidos.')
+      }
+      
+      setAttachments(prev => [...prev, ...validFiles])
+    }
+  }
+  
+  // Remove an attachment
+  const removeAttachment = (index: number, isExisting: boolean = false) => {
+    if (isExisting) {
+      // Mark existing attachment for removal
+      const attachmentId = existingAttachments[index].id
+      setAttachmentsToRemove(prev => [...prev, attachmentId])
+      
+      // Remove from existing attachments list
+      setExistingAttachments(prev => prev.filter((_, i) => i !== index))
+    } else {
+      // Remove new attachment
+      setAttachments(prev => prev.filter((_, i) => i !== index))
+    }
+  }
+  
+  // View attachments for a client
+  const viewAttachments = (clientId: string) => {
+    setViewerClientId(clientId)
+    setIsAttachmentViewerOpen(true)
   }
 
   const handleAddClient = () => {
@@ -179,10 +276,13 @@ export default function ClientContent() {
       estado: '',
       cep: ''
     })
+    setAttachments([]);
+    setExistingAttachments([]);
+    setAttachmentsToRemove([]);
     setIsDialogOpen(true)
   }
 
-  const handleEditClient = (client: any) => {
+  const handleEditClient = async (client: any) => {
     setIsEditing(true)
     setCurrentClientId(client.id)
     setFormData({
@@ -200,6 +300,27 @@ export default function ClientContent() {
       estado: client.estado || '',
       cep: client.cep || ''
     })
+    
+    // Fetch existing attachments for this client
+    try {
+      const response = await fetch(`/api/attachments/by-client/${client.id}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setExistingAttachments(data)
+      } else {
+        console.error('Failed to fetch attachments:', data.error)
+        setExistingAttachments([])
+      }
+    } catch (error) {
+      console.error('Error fetching attachments:', error)
+      setExistingAttachments([])
+    }
+    
+    // Reset other states
+    setAttachments([])
+    setAttachmentsToRemove([])
+    
     setIsDialogOpen(true)
   }
 
@@ -223,6 +344,8 @@ export default function ClientContent() {
     e.preventDefault()
     
     try {
+      let clientId: string | null = null;
+      
       if (isEditing && currentClientId) {
         // Update existing client
         const response = await fetch(`/api/clients/${currentClientId}`, {
@@ -248,10 +371,12 @@ export default function ClientContent() {
         })
         
         if (response.ok) {
+          clientId = currentClientId;
           // Refresh client list
           fetchClients()
         } else {
           console.error('Failed to update client')
+          return;
         }
       } else {
         // Add new client
@@ -278,10 +403,57 @@ export default function ClientContent() {
         })
         
         if (response.ok) {
+          const clientData = await response.json();
+          clientId = clientData.id;
           // Refresh client list
           fetchClients()
         } else {
           console.error('Failed to create client')
+          return;
+        }
+      }
+      
+      // Upload attachments if there are any and we have a client ID
+      if (clientId && (attachments.length > 0 || attachmentsToRemove.length > 0)) {
+        // Upload new attachments
+        if (attachments.length > 0) {
+          const uploadPromises = attachments.map(async (file) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('clientId', clientId!);
+            
+            const response = await fetch('/api/attachments', {
+              method: 'POST',
+              body: formData,
+            });
+            
+            return response.ok;
+          });
+          
+          try {
+            await Promise.all(uploadPromises);
+            console.log('All attachments uploaded successfully');
+          } catch (uploadError) {
+            console.error('Error uploading attachments:', uploadError);
+          }
+        }
+        
+        // Remove marked attachments
+        if (attachmentsToRemove.length > 0 && isEditing) {
+          const removePromises = attachmentsToRemove.map(async (attachmentId) => {
+            const response = await fetch(`/api/attachments/${attachmentId}`, {
+              method: 'DELETE',
+            });
+            
+            return response.ok;
+          });
+          
+          try {
+            await Promise.all(removePromises);
+            console.log('All marked attachments removed successfully');
+          } catch (removeError) {
+            console.error('Error removing attachments:', removeError);
+          }
         }
       }
       
@@ -301,6 +473,9 @@ export default function ClientContent() {
         estado: '',
         cep: ''
       })
+      setAttachments([]);
+      setExistingAttachments([]);
+      setAttachmentsToRemove([]);
       setIsDialogOpen(false)
     } catch (error) {
       console.error('Error submitting form:', error)
@@ -312,6 +487,12 @@ export default function ClientContent() {
       <Button className="mb-4" onClick={handleAddClient}>  
         Adicionar
       </Button>
+      
+      <AttachmentViewer 
+        clientId={viewerClientId || ''}
+        isOpen={isAttachmentViewerOpen}
+        onClose={() => setIsAttachmentViewerOpen(false)}
+      />
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -351,7 +532,7 @@ export default function ClientContent() {
                   name="rg" 
                   value={formData.rg} 
                   onChange={handleInputChange} 
-                  placeholder="00.000.000-X"
+                  placeholder="00.000.000"
                   maxLength={12}
                   required 
                 />
@@ -384,15 +565,22 @@ export default function ClientContent() {
               
               <div className="space-y-2">
                 <Label htmlFor="cep">CEP</Label>
-                <Input 
-                  id="cep" 
-                  name="cep" 
-                  value={formData.cep} 
-                  onChange={handleInputChange} 
-                  placeholder="00000-000"
-                  maxLength={9}
-                  required 
-                />
+                <div className="relative">
+                  <Input 
+                    id="cep" 
+                    name="cep" 
+                    value={formData.cep} 
+                    onChange={handleInputChange} 
+                    placeholder="00000-000"
+                    maxLength={9}
+                    required 
+                  />
+                  {isFetchingAddress && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -475,6 +663,66 @@ export default function ClientContent() {
               </div>
             </div>
             
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-medium mb-4">Anexos</h3>
+              <div className="space-y-2">
+                <input 
+                  type="file" 
+                  id="attachments" 
+                  multiple 
+                  accept=".pdf, .png, .jpg"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => document.getElementById('attachments')?.click()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Adicionar Anexo
+                </Button>
+                
+                <div className="mt-2">
+                  {(existingAttachments.length > 0 || attachments.length > 0) && (
+                    <p className="text-sm text-gray-500 mb-2">Anexos atuais:</p>
+                  )}
+                  
+                  <ul className="mt-1 space-y-1">
+                    {/* Existing attachments */}
+                    {existingAttachments.map((attachment, index) => (
+                      <li key={`existing-${index}`} className="flex items-center justify-between text-sm p-2 rounded">
+                        <span>{attachment.filename}</span>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeAttachment(index, true)}
+                        >
+                          Remover
+                        </Button>
+                      </li>
+                    ))}
+                    
+                    {/* New attachments */}
+                    {attachments.map((file, index) => (
+                      <li key={`new-${index}`} className="flex items-center justify-between text-sm p-2 rounded border">
+                        <span>{file.name}</span>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeAttachment(index, false)}
+                        >
+                          Remover
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
             <div className="flex justify-end space-x-2 pt-4">
               {isEditing && (
                 <Button 
@@ -514,6 +762,7 @@ export default function ClientContent() {
             <TableHead>Contato</TableHead>
             <TableHead>Documento</TableHead>
             <TableHead>Contato</TableHead>
+            <TableHead>Anexos</TableHead>
             <TableHead>Editar</TableHead>
           </TableRow>
         </TableHeader>
@@ -526,6 +775,15 @@ export default function ClientContent() {
                 <TableCell>{c.cpf}</TableCell>
                 <TableCell>{c.telefone}</TableCell>
                 <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => viewAttachments(c.id)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+                <TableCell className="flex space-x-2">
                   <Button 
                     variant="ghost" 
                     size="sm" 

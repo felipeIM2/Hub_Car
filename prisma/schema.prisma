@@ -43,6 +43,23 @@ model Client {
   cep         String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relationship to Attachments
+  attachments Attachment[]
+}
+
+// Attachment model
+model Attachment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  clientId  String   @db.ObjectId
+  filename  String
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship to Client
+  client    Client   @relation(fields: [clientId], references: [id])
 }
 
 // Vehicle model
