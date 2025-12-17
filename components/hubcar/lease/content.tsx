@@ -406,6 +406,20 @@ export default function LeaseContent() {
     }
   };
 
+  // Function to calculate the excess value
+  const calculateExcessValue = () => {
+    const kmValue = parseFloat(kmrodadoValue) || 0;
+    const franquia = currentLeaseFranquia;
+    
+    if (kmValue > franquia) {
+      const extraKm = kmValue - franquia;
+      const extraValue = extraKm * 1.20;
+      return extraValue.toFixed(2);
+    } else {
+      return '0.00';
+    }
+  };
+
   // Update calculated value when kmrodado changes
   useEffect(() => {
     if (isKmModalOpen && kmrodadoValue && !isValueManuallyChanged) {
@@ -730,6 +744,15 @@ export default function LeaseContent() {
                 onChange={handleValueChange}
                 placeholder="Digite o valor"
               />
+              <div className="space-y-2">
+                <Label htmlFor="excessValue">Valor Excedente (R$)</Label>
+                <Input 
+                  id="excessValue"
+                  type="text"
+                  value={`R$ ${calculateExcessValue()}`}
+                  disabled
+                />
+              </div>
               <p className="text-sm text-gray-500">
                 Franquia: {currentLeaseFranquia} KM <br/> 
                 Valor base: R$ {currentLeaseValor.toFixed(2)} <br/> 
