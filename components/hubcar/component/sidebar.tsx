@@ -1,15 +1,16 @@
 "use client"
 
 import {
-  FileUser,
-  FileWarning,
+  FileText,
+  FileCog,
   FileKey,
   PackageSearch,
   Car,
   UsersRound,
   Settings,
   ChartNoAxesCombined,
-  Menu, 
+  Menu,
+  FileSymlink, 
 } from "lucide-react"
 
 import Link from "next/link"
@@ -134,7 +135,12 @@ export default function Sidebar() {
               </div>
               <div className="space-y-1">
                 <div className="pl-2 space-y-1">
-                  <NavItem href="/contract" icon={FileUser}>
+                  <NavItem href="/budget" icon={FileSymlink}>
+                    <button onClick={() => setLabel("Orçamentos")}>
+                     Orçamentos
+                   </button>
+                  </NavItem>
+                  <NavItem href="/contract" icon={FileText}>
                     <button onClick={() => setLabel("Contratos")}>
                      Contratos
                    </button>
@@ -144,7 +150,7 @@ export default function Sidebar() {
                      Locações
                    </button>
                   </NavItem>
-                  <NavItem href="/maintenance" icon={FileWarning}>
+                  <NavItem href="/maintenance" icon={FileCog}>
                     <button onClick={() => setLabel("Manutenções")}>
                      Manutenções
                    </button>

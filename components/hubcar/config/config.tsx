@@ -1,7 +1,7 @@
 import Content from "./content"
 import Layout from "../component/layout"
 
-export default function Client() {
+export default function Config() {
   return (
     <Layout>
       <Content />

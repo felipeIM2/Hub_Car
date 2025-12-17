@@ -4,10 +4,7 @@ export default function DashboardContent() {
   return (
     <>
       <div>
-        <h1>
-          Hello Dashboards
-        </h1>
-        <p>Welcome to your dashboard!</p>
+          FUNCIONALIDADE EM DESENVOLVIMENTO!
       </div>
     </>
   )

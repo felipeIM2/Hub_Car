@@ -5,7 +5,7 @@ export default function () {
     <>
         <div>
             <h1>
-                Hello Configurações
+            FUNCIONALIDADE EM DESENVOLVIMENTO!
             </h1>
         </div>
     </>
