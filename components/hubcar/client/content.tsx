@@ -28,9 +28,17 @@ export default function ClientContent() {
     try {
       const response = await fetch('/api/clients')
       const data = await response.json()
-      setClients(data)
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setClients(data)
+      } else {
+        console.error('API did not return an array:', data)
+        setClients([]) // Set to empty array to prevent errors
+      }
     } catch (error) {
       console.error('Error fetching clients:', error)
+      setClients([]) // Set to empty array to prevent errors
     }
   }
 
@@ -48,6 +56,7 @@ export default function ClientContent() {
     rg: '',
     email: '',
     telefone: '',
+    telefone2: '',
     endereco: '',
     numero: '',
     semNumero: false,
@@ -140,7 +149,7 @@ export default function ClientContent() {
         ...prev,
         [name]: formatCPF(value)
       }))
-    } else if (name === 'telefone') {
+    } else if (name === 'telefone' || name === 'telefone2') {
       setFormData(prev => ({
         ...prev,
         [name]: formatPhone(value)
@@ -267,6 +276,7 @@ export default function ClientContent() {
       rg: '',
       email: '',
       telefone: '',
+      telefone2: '',
       endereco: '',
       numero: '',
       semNumero: false,
@@ -291,6 +301,7 @@ export default function ClientContent() {
       rg: client.rg || '',
       email: client.email || '',
       telefone: client.telefone || '',
+      telefone2: client.telefone2 || '',
       endereco: client.endereco || '',
       numero: client.numero || '',
       semNumero: client.semNumero || false,
@@ -359,6 +370,7 @@ export default function ClientContent() {
             cpf: formData.cpf,
             rg: formData.rg,
             telefone: formData.telefone,
+            telefone2: formData.telefone2,
             endereco: formData.endereco,
             numero: formData.numero,
             semNumero: formData.semNumero,
@@ -391,6 +403,7 @@ export default function ClientContent() {
             cpf: formData.cpf,
             rg: formData.rg,
             telefone: formData.telefone,
+            telefone2: formData.telefone2,
             endereco: formData.endereco,
             numero: formData.numero,
             semNumero: formData.semNumero,
@@ -464,6 +477,7 @@ export default function ClientContent() {
         rg: '',
         email: '',
         telefone: '',
+        telefone2: '',
         endereco: '',
         numero: '',
         semNumero: false,
@@ -560,6 +574,18 @@ export default function ClientContent() {
                   placeholder="(00) 00000-0000"
                   maxLength={15}
                   required 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="telefone2">Telefone 2</Label>
+                <Input 
+                  id="telefone2" 
+                  name="telefone2" 
+                  value={formData.telefone2} 
+                  onChange={handleInputChange} 
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
                 />
               </div>
               
@@ -759,9 +785,10 @@ export default function ClientContent() {
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Contato</TableHead>
+            <TableHead>Email</TableHead>
             <TableHead>Documento</TableHead>
-            <TableHead>Contato</TableHead>
+            <TableHead>Telefone</TableHead>
+            <TableHead>Telefone 2</TableHead>
             <TableHead>Anexos</TableHead>
             <TableHead>Editar</TableHead>
           </TableRow>
@@ -774,6 +801,7 @@ export default function ClientContent() {
                 <TableCell>{c.email}</TableCell>
                 <TableCell>{c.cpf}</TableCell>
                 <TableCell>{c.telefone}</TableCell>
+                <TableCell>{c.telefone2 || 'Sem contato'}</TableCell>
                 <TableCell>
                   <Button 
                     variant="ghost" 

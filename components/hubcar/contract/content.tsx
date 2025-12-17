@@ -34,6 +34,7 @@ type Client = {
   rg: string
   email: string
   telefone: string
+  telefone2: string
   endereco: string
   numero: string
   semNumero: boolean

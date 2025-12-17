@@ -33,6 +33,7 @@ model Client {
   rg          String
   email       String
   telefone    String
+  telefone2   String?
   endereco    String
   numero      String
   semNumero   Boolean

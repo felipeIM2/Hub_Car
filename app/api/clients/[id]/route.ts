@@ -35,6 +35,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         rg: body.rg,
         email: body.email,
         telefone: body.telefone,
+        telefone2: body.telefone2,
         endereco: body.endereco,
         numero: body.numero,
         semNumero: body.semNumero,

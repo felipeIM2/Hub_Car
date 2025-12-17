@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         rg: body.rg,
         email: body.email,
         telefone: body.telefone,
+        telefone2: body.telefone2,
         endereco: body.endereco,
         numero: body.numero,
         semNumero: body.semNumero,
