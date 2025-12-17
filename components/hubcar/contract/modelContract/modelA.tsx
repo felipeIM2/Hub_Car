@@ -28,13 +28,13 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
 
         switch(colorType) {
           case 1: // Vermelho
-            doc.setTextColor(255, 0, 0);
+            doc.setTextColor(227, 2, 2);
             break;
           case 2: // Azul
-            doc.setTextColor(0, 0, 255);
+            doc.setTextColor(2, 27, 190);
             break;
           case 3: // Verde
-            doc.setTextColor(0, 128, 0);
+            doc.setTextColor(46, 161, 3);
             break;
           default: // Preto (padrão)
             doc.setTextColor(0, 0, 0);
@@ -76,15 +76,15 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
     addEmptyLine();
     addText('CLÁUSULA TERCEIRA - O PREÇO', true);
     addText('3.1. O preço final do aluguel será apurado no fechamento ou na rescisão do Contrato e compreenderá o somatório dos valores dos seguintes itens descritos no Tarifário:');
-    addText(`Caução: R$ ${contractToPdf.caucao || '00'}`, true, 10, 1);
-    addText(`Locação: R$ ${contractToPdf.valor_locacao || '00'} na retirada do carro`, true, 10, 1);
+    addText(`Caução: R$ ${contractToPdf.caucao || '00'}`, true, 10, 2);
+    addText(`Locação: R$ ${contractToPdf.valor_locacao || '00'} na retirada do carro`, true, 10, 2);
+    addText(`Franquia KM Contratado: ${contractToPdf.franquia || '0'} KMs`, true, 10, 2);
+    addText('KM Excedente: R$ 1,20  por KM Rodado.', true, 10, 2);
     addText(`O carro está sendo entregue no dia ${startDateFormatted} - ${contractToPdf.hora_entrega || '0h'} e será devolvido no dia ${endDateFormatted} - ${contractToPdf.hora_entrega || '0h'}`, true, 10, 1);
-    addText(`Franquia KM Contratado: ${contractToPdf.franquia || '0'} KMs`, true, 10, 1);
-    addText('KM Excedente: R$ 1,20  por KM Rodado.', true, 10, 1);
     addEmptyLine();
-    addText('Das opções de Pagamento:', true, 10, 1);
-    addText('PIX: 093.523.627-99', true, 10, 1);
-    addText('PIC PAY: Eridelson.dias.moreira', true, 10, 1);
+    addText('Das opções de Pagamento:', true, 11, 2);
+    addText('PIX: 093.523.627-99', true, 10, 3);
+    addText('PIC PAY: Eridelson.dias.moreira',true, 10, 3);
     addEmptyLine();
     
     addText('3.1.1. A diária do carro é de 24 horas,');
@@ -250,7 +250,6 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
 
     // Assinaturas
        addText('Por estarem assim justos e contratados, firmam o presente instrumento, em duas vias de igual teor, juntamente com 2 (duas) testemunhas.');
-    addEmptyLine();
 
 
     // Data formatada por extenso
@@ -273,35 +272,44 @@ export default function ModelA(contractToPdf: any, clientContract: any, vehicleC
       doc.setFont('helvetica', 'normal');
       
       // Linhas de assinatura
-      doc.text('________________________________', margin, signatureY + 10);
-      doc.text('________________________________', margin + 100, signatureY + 10);
+      doc.text('________________________________', margin + 2, signatureY + 10);
+      doc.text('________________________________', margin + 2, signatureY + 38);
 
       // Nomes.
       doc.setFontSize(8);
-      doc.text(`${clientContract.nome}`, margin + 0.5, signatureY + 14);
-      doc.text('ERIDELSON DIAS MOREIRA', margin + 100.5, signatureY + 14);
+      doc.text('ERIDELSON DIAS MOREIRA', margin + 2, signatureY + 14);
+      doc.text(`${clientContract.nome}`, margin + 2, signatureY + 42);
+
+      doc.text(`CPF: 093.523.627-99`, margin + 2, signatureY + 17);
+      doc.text(`CPF: ${clientContract.cpf}`, margin + 2, signatureY + 45);
+
 
       // Títulos
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.text('LOCATÁRIO', margin + 0.5, signatureY + 18);
-      doc.text('LOCADOR', margin + 100.5, signatureY + 18);
+      doc.text('LOCADOR', margin + 2, signatureY + 20.5);
+      doc.text('LOCATÁRIO', margin + 2, signatureY + 48.5);
 
       // Testemunhas
-      const witnessY = signatureY + 30;
-      doc.text('TESTEMUNHAS:', margin + 72, witnessY);
+      const witnessY = signatureY;
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('_________________________________', margin, witnessY + 10);
       doc.text('_________________________________', margin + 100, witnessY + 10);
+      doc.text('_________________________________', margin + 100, witnessY + 38);
       
-      doc.text('', margin, witnessY);
       doc.setFontSize(8);
-      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 108, witnessY + 14);
+      doc.text('AILANDIA REGINA INFURNA MOREIRA', margin + 100, witnessY + 14);
+      doc.text(`${contractToPdf.testemunha_nome}`, margin + 100, witnessY + 42);
 
-      doc.text('CPF: ___________________', margin + 6, witnessY + 18);
-      doc.text('CPF: 093.504.867-76', margin + 120, witnessY + 18);
+      doc.text('CPF: 093.504.867-76', margin + 100, witnessY + 17);
+      doc.text(`CPF: ${contractToPdf.testemunha_cpf}`, margin + 100, witnessY + 45);
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text('TESTEMUNHA 1', margin + 100, witnessY + 20.5);
+      doc.text('TESTEMUNHA 2', margin + 100, witnessY + 48.5);
+
     }
 
     addSignatures()                 		                                                           

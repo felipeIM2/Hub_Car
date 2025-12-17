@@ -153,7 +153,9 @@ export default function ContractContent() {
     valor_locacao: '',
     franquia: '',
     caucao: '',
-    numero_contrato: 0
+    numero_contrato: 0,
+    testemunha_nome: '',
+    testemunha_cpf: ''
   })
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -174,12 +176,35 @@ export default function ContractContent() {
     }))
   }
 
+  // Format CPF: 000.000.000-00
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11)
+    let formatted = ''
+    
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 3 || i === 6) formatted += '.'
+      if (i === 9) formatted += '-'
+      formatted += digits[i]
+    }
+    
+    return formatted
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // Handle formatting for specific fields
+    if (name === 'testemunha_cpf') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: formatCPF(value)
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
     
     // Clear error message when user starts typing
     if (errorMessage) {
@@ -219,7 +244,9 @@ export default function ContractContent() {
       valor_locacao: '',
       franquia: '',
       caucao: '',
-      numero_contrato: nextContractNumber
+      numero_contrato: nextContractNumber,
+      testemunha_nome: '',
+      testemunha_cpf: ''
     })
     setErrorMessage('')
     setIsDialogOpen(true)
@@ -239,7 +266,9 @@ export default function ContractContent() {
       valor_locacao: contract.valor_locacao || '',
       franquia: contract.franquia || '',
       caucao: contract.caucao || '',
-      numero_contrato: contract.numero_contrato || 0
+      numero_contrato: contract.numero_contrato || 0,
+      testemunha_nome: contract.testemunha_nome.toUpperCase() || '',
+      testemunha_cpf: contract.testemunha_cpf || ''
     })
     setErrorMessage('')
     setIsDialogOpen(true)
@@ -301,7 +330,9 @@ export default function ContractContent() {
             valor_locacao: parseFloat(formData.valor_locacao),
             franquia: formData.franquia,
             caucao: formData.caucao,
-            numero_contrato: formData.numero_contrato
+            numero_contrato: formData.numero_contrato,
+            testemunha_nome: formData.testemunha_nome.toUpperCase(),
+            testemunha_cpf: formData.testemunha_cpf
           }),
         })
         
@@ -329,7 +360,9 @@ export default function ContractContent() {
             valor_locacao: parseFloat(formData.valor_locacao),
             franquia: formData.franquia,
             caucao: formData.caucao,
-            numero_contrato: formData.numero_contrato
+            numero_contrato: formData.numero_contrato,
+            testemunha_nome: formData.testemunha_nome.toUpperCase(),
+            testemunha_cpf: formData.testemunha_cpf
           }),
         })
         
@@ -358,7 +391,9 @@ export default function ContractContent() {
         valor_locacao: '',
         franquia: '',
         caucao: '',
-        numero_contrato: nextContractNumber
+        numero_contrato: nextContractNumber,
+        testemunha_nome: '',
+        testemunha_cpf: ''
       })
       setErrorMessage('')
       setIsDialogOpen(false)
@@ -415,6 +450,30 @@ const handleGenerateContract = async (contractId: string) => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Witness fields */}
+            <div className="space-y-2">
+              <Label htmlFor="testemunha_nome">Nome da Testemunha</Label>
+              <Input 
+                id="testemunha_nome" 
+                name="testemunha_nome" 
+                value={formData.testemunha_nome} 
+                onChange={handleInputChange} 
+                placeholder="Nome completo da testemunha" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="testemunha_cpf">CPF da Testemunha</Label>
+              <Input 
+                id="testemunha_cpf" 
+                name="testemunha_cpf" 
+                value={formData.testemunha_cpf} 
+                onChange={handleInputChange} 
+                placeholder="000.000.000-00"
+                maxLength={14}
+              />
             </div>
             
             <div className="space-y-2">

@@ -40,7 +40,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         valor_locacao: parseFloat(body.valor_locacao),
         franquia: body.franquia,
         caucao: body.caucao,
-        numero_contrato: parseInt(body.numero_contrato)
+        numero_contrato: parseInt(body.numero_contrato),
+        testemunha_nome: body.testemunha_nome,
+        testemunha_cpf: body.testemunha_cpf
       }
     })
     

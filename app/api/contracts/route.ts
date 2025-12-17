@@ -53,7 +53,9 @@ export async function POST(request: Request) {
         valor_locacao: parseFloat(body.valor_locacao),
         franquia: body.franquia,
         caucao: body.caucao,
-        numero_contrato: parseInt(body.numero_contrato)
+        numero_contrato: parseInt(body.numero_contrato),
+        testemunha_nome: body.testemunha_nome,
+        testemunha_cpf: body.testemunha_cpf
       }
     })
     
